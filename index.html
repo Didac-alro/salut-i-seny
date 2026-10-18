@@ -665,8 +665,8 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.9.0';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
+window.APP_VER='2.9.1';window.APP_DATE='2026-10-18';
+window.APP_NEWS=["Corregit: el botó de tancar la Configuració i el full de novetats","Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -1124,6 +1124,9 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     <button role="radio" data-fset="open"><span class="fprev" data-fp="open"></span><b>OpenMoji</b><small>Il·lustrat, amb contorn</small></button>
   </div>
   <p class="note">El tema i l'estil d'icones es guarden en aquest dispositiu. El color principal es guarda al teu compte i s'aplica a tots els dispositius.</p>
+  <div class="cfgl" style="margin-top:18px">Apartats de l'app</div>
+  <p class="note" style="margin-top:0">Tria quins apartats vols veure (Nutrició, Aigua, Pes, Activitat, Tensió).</p>
+  <button class="btn ghost" data-prof data-profmods type="button" style="width:100%">Tria els apartats</button>
   <div class="cfgl" style="margin-top:18px">Recordatoris</div>
   <p class="note" style="margin-top:0">Tria els recordatoris i l'hora. Pots rebre'ls com a <b>notificacions</b> de l'app o afegir-los al calendari del mòbil.</p>
   <ul class="list remin" id="remList"></ul>
@@ -1748,12 +1751,12 @@ $('expBtn').onclick=doExport;
 
 /* ---------- Formularis en full emergent ---------- */
 let fsOpen=null,fsPrev=null;
-function openFS(id,first){const sh=$(id);if(!sh)return;closeSheet&&!$('sheet').hidden&&closeSheet();fsPrev=document.activeElement;fsOpen=id;$('fsBg').hidden=false;sh.hidden=false;document.body.classList.add('noscroll');
+function openFS(id,first){const sh=$(id);if(!sh)return;closeSheet&&!$('sheet').hidden&&closeSheet();if(fsOpen&&fsOpen!==id){const o=$(fsOpen);if(o)o.hidden=true}else fsPrev=document.activeElement;fsOpen=id;$('fsBg').hidden=false;sh.hidden=false;document.body.classList.add('noscroll');
   setTimeout(()=>{const f=first?$(first):sh.querySelector('input:not([type=date]):not([type=time]),select');if(f)f.focus({preventScroll:true})},260)}
-function closeFS(){if(!fsOpen)return;$(fsOpen).hidden=true;$('fsBg').hidden=true;document.body.classList.remove('noscroll');fsOpen=null;if(fsPrev&&fsPrev.focus)fsPrev.focus({preventScroll:true})}
-$('fsBg').onclick=closeFS;
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fs],[data-fsclose]');if(!b)return;if(b.dataset.fsclose!==undefined){closeFS();if(typeof entFormReset==='function'&&fsOpen===null)entFormReset()}else openFS(b.dataset.fs)});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fsOpen)closeFS()});
+function closeFS(el){document.querySelectorAll('.fsh:not([hidden])').forEach(x=>{if(!el||x===el||x.id===fsOpen)x.hidden=true});if(!document.querySelector('.fsh:not([hidden])')){$('fsBg').hidden=true;document.body.classList.remove('noscroll');fsOpen=null;if(fsPrev&&fsPrev.focus)fsPrev.focus({preventScroll:true})}}
+$('fsBg').onclick=()=>closeFS();
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fs],[data-fsclose]');if(!b)return;if(b.dataset.fsclose!==undefined){closeFS(b.closest('.fsh'));if(typeof entFormReset==='function'&&fsOpen===null)entFormReset()}else openFS(b.dataset.fs)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.fsh:not([hidden])'))closeFS()});
 
 /* ---------- Períodes de les gràfiques ---------- */
 const PER={pes:0,ten:0,kcal:0},PWIN={pes:60,ten:30,kcal:14};
@@ -1953,7 +1956,7 @@ function applyMods(){const M={pes:'pes',entrenos:'act',tensio:'ten',nutri:'nutri
 /* ---------- El meu perfil ---------- */
 function renderProf(){renderModList();const C=S.config;setV('pf_nom',C.nom||'');setV('pf_alc',S.pes.alcada||'');setV('pf_pobj',S.pes.obj||'');setV('pf_goal',C.objectiu||'mantenir');setV('pf_act',String(C.activitat||1.375));
   $('pf_obj').innerHTML=`<div class="kpi"><span>Calories</span><b>${fmtN(C.kcal)}</b><small>kcal/dia</small></div><div class="kpi"><span>Proteïna</span><b>${C.p} g</b></div><div class="kpi"><span>Hidrats</span><b>${C.c} g</b></div><div class="kpi"><span>Greixos</span><b>${C.g} g</b></div><div class="kpi"><span>Fibra</span><b>${C.f||30} g</b></div><div class="kpi"><span>Aigua</span><b>${fmtC((S.aigua.obj||2000)/1000,1)} L</b></div><div class="kpi"><span>Passos</span><b>${fmtN(S.passos.obj)}</b></div>`}
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-prof]');if(!b)return;renderPerfil();renderProf();openFS('sh_prof')});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-prof]');if(!b)return;renderPerfil();renderProf();openFS('sh_prof');if(b.dataset.profmods!==undefined)setTimeout(()=>{const m=$('modList');m&&m.scrollIntoView({behavior:'smooth',block:'center'})},320)});
 $('pf_nom').onchange=()=>{S.config.nom=$('pf_nom').value.trim()||null;save('config');renderAll()};
 $('pf_alc').onchange=()=>{S.pes.alcada=num($('pf_alc').value);save('pes');renderAll();renderPerfil()};
 $('pf_pobj').onchange=()=>{S.pes.obj=num($('pf_pobj').value);save('pes');renderAll()};
