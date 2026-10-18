@@ -665,8 +665,8 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.9.1';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["Corregit: el botó de tancar la Configuració i el full de novetats","Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
+window.APP_VER='2.9.3';window.APP_DATE='2026-10-18';
+window.APP_NEWS=["Corregit: el botó «Tanca la sessió» ara sempre funciona","Corregit: la secció Convida amics es torna a comprovar cada cop que obres la Configuració","Corregit: el botó de tancar la Configuració i el full de novetats","Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -1273,7 +1273,10 @@ applyTheme(lsGet('salut-theme'));
 $('refBtn').onclick=()=>refreshAll();
 $('snackU').onclick=()=>{const f=snackFn;snackFn=null;$('snack').hidden=true;clearTimeout(snackT);if(f){f();toast('Desfet')}};
 $('themeBtn').onclick=()=>{renderFsetPrev();renderRem();pushState().catch(()=>{});invInit();openFS('sh_cfg');window.SALUT_USER&&window.SALUT_USER.then(u=>{$('cfgMail').textContent='Sessió iniciada com a '+u.email})};
-$('logoutBtn').onclick=()=>{if(window.SB)window.SB.auth.signOut()};
+$('logoutBtn').onclick=async()=>{const b=$('logoutBtn');b.disabled=true;b.textContent='Tancant la sessió…';
+  try{if(window.SB)await Promise.race([window.SB.auth.signOut({scope:'local'}),new Promise(r=>setTimeout(r,2500))])}catch(e){}
+  try{Object.keys(localStorage).filter(k=>k.startsWith('sb-')||k==='salut-cache').forEach(k=>localStorage.removeItem(k))}catch(e){}
+  location.replace(location.origin+location.pathname)};
 $('impFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());const d=j.docs||j;let n=0;
   Object.keys(DEF).forEach(k=>{if(d[k]){S[k]=Object.assign(JSON.parse(JSON.stringify(DEF[k])),d[k]);save(k);n++}});saveLocal();renderAll();toast(`Còpia importada: ${n} apartats`)}catch(err){toast('El fitxer no és una còpia vàlida')}};
 function renderFsetPrev(){if(!renderFsetPrev.ld){renderFsetPrev.ld=1;Promise.all(['d3','noto','open'].map(k=>loadFset(k).catch(()=>{}))).then(()=>renderFsetPrev())}document.querySelectorAll('[data-fp]').forEach(sp=>{const keep=FSET;FSET=sp.dataset.fp;sp.innerHTML=['egg','poultry-leg','broccoli','red-apple'].map(k=>`<i>${fiSvg(k)}</i>`).join('');FSET=keep});
@@ -1914,7 +1917,7 @@ $('remAdd').onclick=async()=>{const sel=REMS.filter(r=>$q(`[data-remk="${r.k}"]`
 /* ---------- Compte: invitacions, privacitat i esborrat ---------- */
 let invChecked=false;
 async function invCall(body){const {data,error}=await window.SB.functions.invoke('invite',{body});if(error)throw new Error(error.message||'error');if(data&&data.error)throw new Error(data.error);return data||{}}
-async function invInit(){if(invChecked||!window.SB)return;invChecked=true;try{const d=await invCall({check:true});if(d.admin){$('invBox').hidden=false;invList()}}catch(e){}}
+async function invInit(){if(invChecked||!window.SB)return;try{const d=await invCall({check:true});invChecked=true;if(d.admin){$('invBox').hidden=false;invList()}else console.info('Convida amics: aquest usuari no és administrador (revisa el secret ADMIN_EMAILS)')}catch(e){console.warn('Convida amics: no s\'ha pogut comprovar (funció «invite»):',e.message)}}
 async function invList(){try{const d=await invCall({list:true});const l=d.users||[];
   $('invList').innerHTML=l.length?l.map(u=>`<li><div class="main" style="flex:1"><div>${esc(u.email)}</div><div class="meta">${u.actiu?'Actiu · últim accés '+fmtD(String(u.last).slice(0,10)):'Invitació enviada el '+fmtD(String(u.invited).slice(0,10))}</div></div></li>`).join(''):'<li class="empty">Encara no has convidat ningú.</li>'}catch(e){}}
 $('invGo').onclick=async()=>{const email=$('invMail').value.trim();if(!/^\S+@\S+\.\S+$/.test(email)){fErr('invMail','Escriu un correu vàlid');return}
