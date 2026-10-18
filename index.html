@@ -665,8 +665,8 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.9.3';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["Corregit: el botó «Tanca la sessió» ara sempre funciona","Corregit: la secció Convida amics es torna a comprovar cada cop que obres la Configuració","Corregit: el botó de tancar la Configuració i el full de novetats","Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
+window.APP_VER='2.9.4';window.APP_DATE='2026-10-18';
+window.APP_NEWS=["Si la IA falla, ara t'explica el motiu concret","Corregit: el botó «Tanca la sessió» ara sempre funciona","Corregit: la secció Convida amics es torna a comprovar cada cop que obres la Configuració","Corregit: el botó de tancar la Configuració i el full de novetats","Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -722,7 +722,7 @@ window.APP_NEWS=["Corregit: el botó «Tanca la sessió» ara sempre funciona","
   const b64=blob=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=ko;r.readAsDataURL(blob)});
   const sample={async json(prompt,opts={}){const imgs=[];for(const im of (opts.images||[]))imgs.push({media_type:im.type||'image/jpeg',data:await b64(im)});
     const {data,error}=await sb.functions.invoke('ai',{body:{prompt,images:imgs,model:opts.modelTier==='quick'?'quick':'default'}});
-    if(error)throw Object.assign(new Error(error.message||'ai'),{code:'network'});if(data&&data.error)throw Object.assign(new Error(data.error),{code:'network'});return data&&data.json}};
+    if(error){let m=error.message||'ai';try{const bd=error.context&&await error.context.json();if(bd&&bd.error)m=bd.error;else if(bd&&bd.message)m=bd.message}catch(e){}if(/not found|404/i.test(m))m='La funció «ai» no existeix a Supabase';throw Object.assign(new Error(m),{code:'network'})}if(data&&data.error)throw Object.assign(new Error(data.error),{code:'network'});return data&&data.json}};
   // --- descàrregues ---
   const downloads={async save({filename,data}){const blob=data instanceof Blob?data:new Blob([data]);const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1500)}};
   window.claude={use:async(n)=>{if(n==='db'){await userReady;return db}if(n==='user'){const u=await userReady;return{id:async()=>u.id,email:u.email}}if(n==='sample')return sample;if(n==='downloads')return downloads;return null}};
@@ -2092,7 +2092,7 @@ let SAMPLE=null,aiItems=[],aiNota='';
 const withTO=(p,ms=45000)=>Promise.race([p,new Promise((_,ko)=>setTimeout(()=>ko(Object.assign(new Error('timeout'),{code:'timeout'})),ms))]);
 (async()=>{try{if(window.claude&&window.claude.use)SAMPLE=await window.claude.use('sample')}catch(e){}
   if(!SAMPLE){$('ai_go').disabled=true}})();
-function aiErr(e){const c=e&&e.code;return c==='timeout'?'La IA ha trigat massa a respondre. Torna-ho a provar.':c==='not_granted'?'La IA no està disponible ara mateix. Torna-ho a provar d\'aquí a una estona.':c==='rate_limited'?'Has fet moltes consultes seguides. Espera uns segons i torna-ho a provar.':(c==='parse'||c==='invalid_json'||/JSON/i.test(e&&e.message||''))?'No he entès la resposta de la IA. Torna-ho a provar o escriu-ho d\'una altra manera.':'No s\'ha pogut connectar amb la IA. Comprova que la funció «ai» i la clau de Gemini estiguin configurades.'}
+function aiErr(e){const c=e&&e.code;return c==='timeout'?'La IA ha trigat massa a respondre. Torna-ho a provar.':c==='not_granted'?'La IA no està disponible ara mateix. Torna-ho a provar d\'aquí a una estona.':c==='rate_limited'?'Has fet moltes consultes seguides. Espera uns segons i torna-ho a provar.':(c==='parse'||c==='invalid_json'||/JSON/i.test(e&&e.message||''))?'No he entès la resposta de la IA. Torna-ho a provar o escriu-ho d\'una altra manera.':'No s\'ha pogut connectar amb la IA.'+(e&&e.message&&e.message!=='ai'?' Detall: '+e.message:' Comprova la funció «ai» i la clau de Gemini.')}
 $('ai_q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('ai_go').click()}});
 $('ai_go').onclick=async()=>{
   const q=$('ai_q').value.trim();if(!q){fErr('ai_q','Escriu què has menjat');return}if(!SAMPLE)return;
