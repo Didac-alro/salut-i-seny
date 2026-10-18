@@ -437,7 +437,7 @@ html{background:var(--bg)}
 .vital:first-child .vv{font-size:2.2rem}
 .vital:first-child .vs{height:48px}
 .vitals .vital:nth-child(n){border-left:0}
-.hero{grid-template-columns:repeat(4,1fr)!important}
+.hero{grid-template-columns:repeat(var(--rn,4),1fr)!important}
 .ring .rw,.ring svg{width:70px!important;height:70px!important}
 #resBlocks>[data-blk]+[data-blk]{margin-top:12px}
 #resBlocks .panel{margin-top:0!important}
@@ -652,11 +652,21 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 @media (prefers-reduced-motion:reduce){.scanframe i{animation:none}}
 
 .auth [hidden],#privBox[hidden]{display:none!important}
+
+.profh{margin:18px 4px 6px;font-size:1.4rem}
+.modl li{padding:6px 0}.modl .chk{align-items:flex-start}
+.obmods{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.clist{list-style:none;margin:10px 0 6px;padding:0}.clist li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);font-size:.9rem}.clist li:first-child{border-top:0}
+.clist li span:last-child{text-align:right;color:var(--muted)}.clist b{color:var(--ink)}
+.tips{margin:0;padding-left:18px}.tips li{margin:8px 0;line-height:1.45}
+.bnav [data-s][hidden]{display:none!important}
+
+[hidden]{display:none!important}
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.7.0';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["Nou apartat «El meu perfil» (icona de persona a dalt): nom, dades personals, objectiu i pla","«Resum» ara es diu «Inici», i et saluda pel teu nom","Més de 70 activitats, amb cerca: escriu i tria (córrer, pàdel, ioga, escalada…)","La base comuna ara es diu «Despensa» i hi surten tots els aliments, també els teus"];
+window.APP_VER='2.9.0';window.APP_DATE='2026-10-18';
+window.APP_NEWS=["Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -715,7 +725,7 @@ window.APP_NEWS=["Nou apartat «El meu perfil» (icona de persona a dalt): nom, 
     if(error)throw Object.assign(new Error(error.message||'ai'),{code:'network'});if(data&&data.error)throw Object.assign(new Error(data.error),{code:'network'});return data&&data.json}};
   // --- descàrregues ---
   const downloads={async save({filename,data}){const blob=data instanceof Blob?data:new Blob([data]);const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1500)}};
-  window.claude={use:async(n)=>{if(n==='db'){await userReady;return db}if(n==='user'){const u=await userReady;return{id:async()=>u.id,email:u.email}}if(n==='sample')return cfg.AI_ENABLED===false?null:sample;if(n==='downloads')return downloads;return null}};
+  window.claude={use:async(n)=>{if(n==='db'){await userReady;return db}if(n==='user'){const u=await userReady;return{id:async()=>u.id,email:u.email}}if(n==='sample')return sample;if(n==='downloads')return downloads;return null}};
   window.SALUT_USER=userReady;
 })();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js?v='+window.APP_VER).catch(()=>{}));
@@ -728,6 +738,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   <p><b>Per a què:</b> només per mostrar-te el teu seguiment de salut. No es fan servir per a cap altra finalitat, no es venen ni es comparteixen amb ningú.</p>
   <p><b>On:</b> a una base de dades de Supabase amb servidors a la Unió Europea (Irlanda), protegida amb contrasenya i xifratge. Cada usuari només pot veure les seves pròpies dades; ni tan sols la persona que gestiona l'app les pot consultar des de l'app.</p>
   <p><b>Despensa compartida:</b> els aliments que afegeixes a «Els meus aliments» (nom, marca i valors nutricionals per 100 g) es comparteixen amb els altres usuaris per fer créixer la base. <u>No</u> es comparteix què menges, ni quan, ni cap altra dada teva.</p>
+  <p><b>Intel·ligència artificial:</b> quan fas servir «Calcula amb IA» o la lectura d'etiquetes amb IA, només s'envia a Google (Gemini) la descripció del menjar o la foto de l'etiqueta. Mai el teu nom, el teu pes, la tensió ni cap altra dada personal.</p>
   <p><b>Serveis externs:</b> quan cerques un producte, el text de la cerca o el codi de barres s'envia a Open Food Facts (base de dades pública). Cap dada personal ni de salut s'hi envia.</p>
   <p><b>Els teus drets:</b> pots exportar totes les teves dades (Exporta a Excel) i esborrar el teu compte i totes les dades en qualsevol moment des de Configuració. L'esborrat és definitiu.</p>
   <p><b>Base legal:</b> el teu consentiment explícit, que pots retirar esborrant el compte.</p>
@@ -849,9 +860,9 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 
 
   <section id="nutri">
-    <h2>Calories i macros</h2>
+    <h2>Nutrició</h2>
     <div class="subtabs" role="tablist" aria-label="Apartats de nutrició">
-      <button data-nt="avui" role="tab">Avui</button><button data-nt="tuppers" role="tab">Tuppers</button><button data-nt="aliments" role="tab">Aliments</button><button data-nt="setmana" role="tab">Setmana</button><button data-nt="objectius" role="tab">Objectius</button>
+      <button data-nt="avui" role="tab">Avui</button><button data-nt="tuppers" role="tab">Tuppers</button><button data-nt="aliments" role="tab">Aliments</button><button data-nt="setmana" role="tab">Setmana</button><button data-nt="consells" role="tab">Consells</button>
     </div>
     <div class="nt" data-nt="avui" role="tabpanel">
     <div class="panel" id="fastAsk" hidden style="border-color:var(--c-pes)"></div>
@@ -871,12 +882,12 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
         </div>
         <button class="btn" id="fr_add" disabled>Afegeix</button>
       </div>
-      <div class="ordiv"><span>o busca a internet</span></div>
+      <div class="ordiv"><span>o escriu el que has menjat</span></div>
       <div class="aisearch">
-        <label>Busca un producte<input id="ai_q" placeholder="pastanaga, hummus Hacendado…" enterkeyhint="search"></label>
-        <button class="btn" id="ai_go" hidden>Calcula amb IA</button>
+        <label>Què has menjat o què busques?<input id="ai_q" placeholder="llenties amb xoriço 300 g · hummus Hacendado" enterkeyhint="search"></label>
+        <button class="btn" id="ai_go">✨ Calcula amb IA (plats cuinats)</button>
         <button class="btn ghost webbtn" id="scanDay" type="button"><span aria-hidden="true">▥</span> Escaneja un codi de barres</button>
-        <button class="btn webbtn" id="ai_web"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" opacity="0.2"/><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></svg> Busca a Open Food Facts</button>
+        <button class="btn ghost webbtn" id="ai_web"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" opacity="0.2"/><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></svg> Busca a Open Food Facts</button>
         <ul class="offres" id="offDay"></ul>
         <div id="aiRes" aria-live="polite"></div>
       </div>
@@ -909,6 +920,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     </div>
     <div class="nt" data-nt="tuppers" role="tabpanel">
     <button class="addcta" id="tupNew"><span>＋</span>Prepara tuppers</button>
+    <button class="addcta" id="recNew" style="--acc:var(--sky)"><span>＋</span>Nova recepta (pes final)</button>
     <div id="tupList"></div>
     </div>
     <div class="nt" data-nt="aliments" role="tabpanel">
@@ -925,7 +937,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
         </div>
         <div class="icorow"><span id="repIcoPrev"></span><span class="note" style="margin:0;flex:1" id="repIcoTxt">Icona automàtica segons el nom</span><button class="chip" id="repIcoBtn" type="button">Canvia la icona</button></div>
         <div class="icogrid" id="repIcoGrid" hidden></div>
-        <button class="btn ghost" id="rep_ai" hidden>Busca amb IA</button>
+        <button class="btn ghost" id="rep_ai" style="margin-top:10px;display:block;width:100%;box-sizing:border-box">✨ Busca amb IA</button>
         <button class="btn ghost webbtn" id="rep_web"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z" opacity="0.2"/><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></svg> Busca a Open Food Facts</button>
         <div class="scanrow"><button class="qbtn" id="scanRep" type="button"><span>▥</span>Escaneja el codi</button><label class="qbtn" for="bc_gal"><span>🖼</span>Codi des d'una foto</label></div>
         <input type="file" accept="image/*" capture="environment" id="bc_cam" class="vh"><input type="file" accept="image/*" id="bc_gal" class="vh">
@@ -955,11 +967,55 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
       <ul class="list" id="repList" style="margin-top:8px"></ul>
     </div>
     </div>
+    <div class="nt" data-nt="consells" role="tabpanel">
+    <div class="panel"><h3>Àpats d'exemple</h3>
+      <div class="seg" role="radiogroup" aria-label="Àpat" style="margin-bottom:12px"><select id="cs_ap" aria-label="Tria l'àpat" style="width:100%"><option>Esmorzar</option><option selected>Dinar</option><option>Berenar</option><option>Sopar</option></select></div>
+      <div id="consBox"></div>
+    </div>
+    <div class="panel"><h3>Calculadora cru ↔ cuinat</h3>
+      <p class="note" style="margin-top:0">L'arròs, la pasta i els llegums guanyen pes en cuinar-se (absorbeixen aigua); la carn i el peix en perden.</p>
+      <div class="fields"><label class="wide">Aliment<select id="cv_ing"></select></label><label>Grams<input type="number" inputmode="numeric" id="cv_g" value="70"></label><label>Tinc el pes<select id="cv_dir"><option value="c">en cru</option><option value="u">cuinat</option></select></label></div>
+      <p class="calc" id="cvRes" style="font-size:1.05rem"></p>
+    </div>
+    <div class="panel"><h3>Consells per pesar bé</h3>
+      <ul class="tips"><li><b>Pesa sempre igual.</b> Si a l'app apuntes el pes cuinat, pesa després de cuinar; si fas tuppers, pesa els ingredients en cru i fes servir una recepta amb pes final.</li><li><b>Fes servir la tara.</b> Posa el plat a la bàscula, prem tara i després afegeix l'aliment.</li><li><b>L'oli compta.</b> Una cullerada són uns 10 g (90 kcal). Mesura-la, no la facis a ull.</li><li><b>Pasta i arròs:</b> 60-80 g en cru és una ració normal; cuits fan entre 150 i 220 g.</li><li><b>Llegums secs:</b> 60-80 g en cru per ració; si són de pot, ja estan cuits (pesa'ls escorreguts).</li><li><b>Carn i peix:</b> perden un 20-30 % en cuinar-se. 150 g en cru són uns 110 g cuinats.</li></ul>
+    </div>
+    </div>
     <div class="nt" data-nt="setmana" role="tabpanel">
     <div class="panel"><h3>Resum setmanal</h3><div id="weekBox"></div></div>
     <div class="panel"><h3>Calories per dia</h3><div id="kcalNav"></div><div id="nutriBars" data-pw="kcal"></div></div>
     </div>
-    <div class="nt" data-nt="objectius" role="tabpanel">
+        </div>
+  </section>
+</main>
+  <nav class="bnav" aria-label="Seccions">
+    <button data-s="resum"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z" opacity="0.2"/><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></svg></span>Inici</button>
+    <button data-s="pes"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg></span>Pes</button>
+    <button data-s="entrenos"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,56a24,24,0,1,1-24-24A24,24,0,0,1,176,56Z" opacity="0.2"/><path d="M152,88a32,32,0,1,0-32-32A32,32,0,0,0,152,88Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,40Zm67.31,100.68c-.61.28-7.49,3.28-19.67,3.28-13.85,0-34.55-3.88-60.69-20a169.31,169.31,0,0,1-15.41,32.34,104.29,104.29,0,0,1,31.31,15.81C173.92,186.65,184,207.35,184,232a8,8,0,0,1-16,0c0-41.7-34.69-56.71-54.14-61.85-.55.7-1.12,1.41-1.69,2.1-19.64,23.8-44.25,36.18-71.63,36.18A92.29,92.29,0,0,1,31.2,208,8,8,0,0,1,32.8,192c25.92,2.59,48.47-7.49,67-30,12.49-15.14,21-33.61,25.25-47C86.13,92.34,61.27,111.63,61,111.84A8,8,0,1,1,51,99.36c1.5-1.2,37.22-29,89.51,6.57,45.47,30.91,71.93,20.31,72.18,20.19a8,8,0,1,1,6.63,14.56Z"/></svg></span>Activitat</button>
+    <button data-s="tensio"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M232,102c0,66-104,122-104,122S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A54,54,0,0,1,232,102Z" opacity="0.2"/><path d="M72,144H32a8,8,0,0,1,0-16H67.72l13.62-20.44a8,8,0,0,1,13.32,0l25.34,38,9.34-14A8,8,0,0,1,136,128h24a8,8,0,0,1,0,16H140.28l-13.62,20.44a8,8,0,0,1-13.32,0L88,126.42l-9.34,14A8,8,0,0,1,72,144ZM178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,.75,0,1.5,0,2.25a8,8,0,1,0,16-.5c0-.58,0-1.17,0-1.75A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46c0,53.61-77.76,102.15-96,112.8-10.83-6.31-42.63-26-66.68-52.21a8,8,0,1,0-11.8,10.82c31.17,34,72.93,56.68,74.69,57.63a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40Z"/></svg></span>Tensió</button>
+    <button data-s="nutri"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,112a96,96,0,0,1-56,87.3V208a8,8,0,0,1-8,8H96a8,8,0,0,1-8-8v-8.7A96,96,0,0,1,32,112Z" opacity="0.2"/><path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23Zm15.91,18.2A71.45,71.45,0,0,1,199.54,104H148.12A71.84,71.84,0,0,1,189.39,74.43ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Zm36.66,152A8,8,0,0,0,160,199.3V208H96v-8.7A8,8,0,0,0,91.34,192a88.29,88.29,0,0,1-51-72H215.63A88.29,88.29,0,0,1,164.66,192Z"/></svg></span>Nutrició</button>
+  </nav>
+<button class="fab" id="fab" aria-label="Afegeix ràpid" aria-haspopup="dialog"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg></button>
+<div class="sheet-bg" id="sheetBg" hidden></div>
+<div class="sheet-bg" id="fsBg" hidden></div>
+<div class="fsh" id="sh_prof" hidden role="dialog" aria-modal="true" aria-label="El meu perfil"><div class="fsh-in"><div class="grab" aria-hidden="true"></div><button class="fsh-x del" data-fsclose aria-label="Tanca"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
+<div class="panel"><h3>El meu perfil</h3>
+  <div class="fields">
+    <label class="wide">Nom<input id="pf_nom" placeholder="Com vols que et diguem" autocomplete="given-name"></label>
+    <label>Data de naixement<input type="date" id="pf_naix"></label>
+    <label>Sexe<select id="pf_sexe"><option value="">—</option><option value="h">Home</option><option value="d">Dona</option></select></label>
+    <label>Alçada (cm)<input type="number" inputmode="numeric" id="pf_alc"></label>
+    <label>Pes objectiu (kg)<input type="number" step="0.1" inputmode="decimal" id="pf_pobj"></label>
+    <label>Objectiu<select id="pf_goal"><option value="perdre">Perdre greix</option><option value="mantenir">Mantenir-me</option><option value="guanyar">Guanyar múscul</option></select></label>
+      <label>Activitat habitual<select id="pf_act"><option value="1.2">Sedentària</option><option value="1.375">Lleugera (1-3 dies)</option><option value="1.55">Moderada (3-5 dies)</option><option value="1.725">Alta (6-7 dies)</option></select></label>
+  </div>
+  <p class="note" id="pf_info"></p>
+  <div class="cfgl" style="margin-top:14px">Què vols fer servir?</div>
+  <p class="note" style="margin-top:0">Activa només els apartats que t'interessen. Els altres s'amaguen de tota l'app.</p>
+  <ul class="list modl" id="modList"></ul>
+  <div class="kpis plan" id="pf_obj" hidden></div><button id="pf_plan" hidden></button>
+</div>
+<h2 class="profh">Objectius</h2>
     <div class="panel" style="--acc:var(--c-ten)">
       <h3>Dèficit per perdre greix</h3>
       <div id="defBox"></div>
@@ -988,37 +1044,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
         <h3>Objectiu adaptatiu de calories</h3>
         <div id="tdeeBox"></div>
       </div>
-    </div>
-    </div>
-  </section>
-</main>
-  <nav class="bnav" aria-label="Seccions">
-    <button data-s="resum"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z" opacity="0.2"/><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></svg></span>Inici</button>
-    <button data-s="pes"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg></span>Pes</button>
-    <button data-s="entrenos"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,56a24,24,0,1,1-24-24A24,24,0,0,1,176,56Z" opacity="0.2"/><path d="M152,88a32,32,0,1,0-32-32A32,32,0,0,0,152,88Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,40Zm67.31,100.68c-.61.28-7.49,3.28-19.67,3.28-13.85,0-34.55-3.88-60.69-20a169.31,169.31,0,0,1-15.41,32.34,104.29,104.29,0,0,1,31.31,15.81C173.92,186.65,184,207.35,184,232a8,8,0,0,1-16,0c0-41.7-34.69-56.71-54.14-61.85-.55.7-1.12,1.41-1.69,2.1-19.64,23.8-44.25,36.18-71.63,36.18A92.29,92.29,0,0,1,31.2,208,8,8,0,0,1,32.8,192c25.92,2.59,48.47-7.49,67-30,12.49-15.14,21-33.61,25.25-47C86.13,92.34,61.27,111.63,61,111.84A8,8,0,1,1,51,99.36c1.5-1.2,37.22-29,89.51,6.57,45.47,30.91,71.93,20.31,72.18,20.19a8,8,0,1,1,6.63,14.56Z"/></svg></span>Activitat</button>
-    <button data-s="tensio"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M232,102c0,66-104,122-104,122S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A54,54,0,0,1,232,102Z" opacity="0.2"/><path d="M72,144H32a8,8,0,0,1,0-16H67.72l13.62-20.44a8,8,0,0,1,13.32,0l25.34,38,9.34-14A8,8,0,0,1,136,128h24a8,8,0,0,1,0,16H140.28l-13.62,20.44a8,8,0,0,1-13.32,0L88,126.42l-9.34,14A8,8,0,0,1,72,144ZM178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,.75,0,1.5,0,2.25a8,8,0,1,0,16-.5c0-.58,0-1.17,0-1.75A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46c0,53.61-77.76,102.15-96,112.8-10.83-6.31-42.63-26-66.68-52.21a8,8,0,1,0-11.8,10.82c31.17,34,72.93,56.68,74.69,57.63a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40Z"/></svg></span>Tensió</button>
-    <button data-s="nutri"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,112a96,96,0,0,1-56,87.3V208a8,8,0,0,1-8,8H96a8,8,0,0,1-8-8v-8.7A96,96,0,0,1,32,112Z" opacity="0.2"/><path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23Zm15.91,18.2A71.45,71.45,0,0,1,199.54,104H148.12A71.84,71.84,0,0,1,189.39,74.43ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Zm36.66,152A8,8,0,0,0,160,199.3V208H96v-8.7A8,8,0,0,0,91.34,192a88.29,88.29,0,0,1-51-72H215.63A88.29,88.29,0,0,1,164.66,192Z"/></svg></span>Nutrició</button>
-  </nav>
-<button class="fab" id="fab" aria-label="Afegeix ràpid" aria-haspopup="dialog"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg></button>
-<div class="sheet-bg" id="sheetBg" hidden></div>
-<div class="sheet-bg" id="fsBg" hidden></div>
-<div class="fsh" id="sh_prof" hidden role="dialog" aria-modal="true" aria-label="El meu perfil"><div class="fsh-in"><div class="grab" aria-hidden="true"></div><button class="fsh-x del" data-fsclose aria-label="Tanca"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
-<div class="panel"><h3>El meu perfil</h3>
-  <div class="fields">
-    <label class="wide">Nom<input id="pf_nom" placeholder="Com vols que et diguem" autocomplete="given-name"></label>
-    <label>Data de naixement<input type="date" id="pf_naix"></label>
-    <label>Sexe<select id="pf_sexe"><option value="">—</option><option value="h">Home</option><option value="d">Dona</option></select></label>
-    <label>Alçada (cm)<input type="number" inputmode="numeric" id="pf_alc"></label>
-    <label>Pes objectiu (kg)<input type="number" step="0.1" inputmode="decimal" id="pf_pobj"></label>
-    <label>Objectiu<select id="pf_goal"><option value="perdre">Perdre greix</option><option value="mantenir">Mantenir-me</option><option value="guanyar">Guanyar múscul</option></select></label>
-      <label>Activitat habitual<select id="pf_act"><option value="1.2">Sedentària</option><option value="1.375">Lleugera (1-3 dies)</option><option value="1.55">Moderada (3-5 dies)</option><option value="1.725">Alta (6-7 dies)</option></select></label>
-  </div>
-  <p class="note" id="pf_info"></p>
-  <div class="cfgl" style="margin-top:14px">Els meus objectius diaris</div>
-  <div class="kpis plan" id="pf_obj"></div>
-  <button class="btn" id="pf_plan" type="button" style="width:100%">Recalcula el meu pla</button>
-  <p class="note">Els objectius es poden ajustar a mà a Nutrició → Objectius.</p>
-</div></div></div>
+    </div></div>
 <div class="fsh" id="sh_plan" hidden role="dialog" aria-modal="true" aria-label="El teu pla"><div class="fsh-in"><div class="grab" aria-hidden="true"></div>
 <div class="panel"><h3>El teu pla</h3>
   <div class="fields" id="plSel"><label>Què vols aconseguir?<select id="pl_g"><option value="perdre">Perdre greix</option><option value="mantenir" selected>Mantenir-me</option><option value="guanyar">Guanyar múscul</option></select></label>
@@ -1039,6 +1065,8 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     <label>Què vols aconseguir?<select id="ob_g"><option value="perdre">Perdre greix</option><option value="mantenir" selected>Mantenir-me</option><option value="guanyar">Guanyar múscul</option></select></label>
     <label>Activitat habitual<select id="ob_a"><option value="1.2">Sedentària (feina asseguda, poc exercici)</option><option value="1.375" selected>Lleugera (1-3 dies d'exercici)</option><option value="1.55">Moderada (3-5 dies)</option><option value="1.725">Alta (6-7 dies o feina física)</option></select></label>
   </div>
+  <div class="cfgl" style="margin-top:6px">Què vols fer servir?</div>
+  <div class="obmods"><label class="chk"><input type="checkbox" data-obm="nutri" checked> Nutrició</label><label class="chk"><input type="checkbox" data-obm="aigua" checked> Aigua</label><label class="chk"><input type="checkbox" data-obm="pes" checked> Pes i mesures</label><label class="chk"><input type="checkbox" data-obm="act" checked> Activitat</label><label class="chk"><input type="checkbox" data-obm="ten" checked> Tensió arterial</label></div>
   <p class="note">Consell: afegeix l'app a la pantalla d'inici des del menú de Chrome (⋮ → Afegeix a la pantalla d'inici) per tenir-la com una app més.</p>
   <button class="btn" id="ob_go" type="button" style="width:100%">Comença</button>
   <button class="linkb" id="ob_skip" type="button" style="width:100%">Ara no</button>
@@ -1069,7 +1097,8 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     </div>
     <button class="btn ghost" id="tp_madd" type="button">Afegeix l'ingredient</button>
   </details>
-  <div class="fields" style="margin-top:14px"><label>Nombre de tuppers<input type="number" inputmode="numeric" id="tp_por" min="1" value="5"></label></div>
+  <div class="fields" style="margin-top:14px"><label id="tpPorL">Nombre de tuppers<input type="number" inputmode="numeric" id="tp_por" min="1" value="5"></label><label id="tpPesL" hidden>Pes final del plat cuinat (g)<input type="number" inputmode="numeric" id="tp_pes" placeholder="pesa l'olla sense la tara"></label></div>
+  <p class="note" id="tpRecNote" hidden>Posa els ingredients <b>tal com els has pesat</b> (normalment crus) i, en acabar, <b>pesa el plat sencer cuinat</b>. L'app calcula els valors per 100 g del plat i el desa a Els meus aliments i a la Despensa.</p>
   <div id="tpTot"></div>
   <button class="btn" id="tp_save" type="button">Desa</button>
 </div></div></div>
@@ -1796,11 +1825,20 @@ let OFFR={};
 let offImg=null;
 function offFill(x){offImg=x.img||null;$('rep_n').value=x.n;$('rep_m').value=x.marca||'';$('rep_k').value=x.k??'';$('rep_p').value=x.p??'';$('rep_c').value=x.c??'';$('rep_g').value=x.g??'';$('rep_f').value=x.fb??'';$('rep_r').value=x.racio??'';repFromPhoto=true;repAI=false;repIcoUpd();$('repImg').innerHTML=`✓ Dades d'Open Food Facts${x.code?' (codi '+esc(x.code)+')':''}. Revisa-les i toca <b>Desa</b>.`}
 function gLink(q){const u='https://www.google.com/search?q='+encodeURIComponent(q+' valors nutricionals per 100 g');return `<li class="glink"><a class="btn ghost webbtn" href="${u}" target="_blank" rel="noopener">${ic('search')} No el trobes? Busca'l a Google</a><small class="note" style="display:block;margin-top:6px">S'obre Google en una pestanya nova. Copia les dades de l'etiqueta i escriu-les a mà.</small></li>`}
-async function runOff(q,box,mode){const my=++runOff.seq;box.innerHTML='<li class="note">Buscant a Open Food Facts…</li>';
-  try{const l=await offSearch(q);if(my!==runOff.seq)return;OFFR={};l.forEach(x=>OFFR[x.code]=x);box.innerHTML=(l.length?l.map(x=>offItem(x,mode)).join(''):'<li class="note">Open Food Facts no té aquest producte.</li>')+gLink(q)}
+async function runOff(q,box,mode,pre){pre=pre||'';const my=++runOff.seq;box.innerHTML=pre+'<li class="note">Buscant a Open Food Facts…</li>';
+  try{const l=await offSearch(q);if(my!==runOff.seq)return;OFFR={};l.forEach(x=>OFFR[x.code]=x);box.innerHTML=pre+(l.length?(pre?'<li class="note" style="background:none;padding:2px 0">D\'Open Food Facts</li>':'')+l.map(x=>offItem(x,mode)).join(''):'<li class="note">Open Food Facts no té aquest producte. Si és un plat cuinat, prova <b>Calcula amb IA</b>.</li>')+gLink(q)}
   catch(e){if(my!==runOff.seq)return;box.innerHTML=`<li class="note">No s'ha pogut connectar amb Open Food Facts.<br><small>Detall: ${esc(e.message||e)}</small></li>`+gLink(q)}}
 $('rep_web').onclick=()=>{const n=$('rep_n').value.trim(),m=$('rep_m').value.trim();if(!n){fErr('rep_n','Escriu el nom del producte');return}runOff(n+(m?' '+m:''),$('offRep'),'rep')};
-let offT=null,offSeq=0;$('ai_q').addEventListener('input',()=>{clearTimeout(offT);const q=$('ai_q').value.trim();if(q.length<3){$('offDay').innerHTML='';return}offT=setTimeout(()=>runOff(q,$('offDay'),'day'),550)});
+function locSearch(q){const w=normN(q).replace(/[^a-z0-9 ]+/g,' ').split(' ').filter(x=>x.length>2);if(!w.length)return[];
+  return despensa().filter(([,x])=>{const n=normN((x.n||'')+' '+(x.marca||''));return w.every(t=>n.includes(t))}).sort((a,b)=>(S.aliments.items[b[0]]?1:0)-(S.aliments.items[a[0]]?1:0)).slice(0,8)}
+function locHtml(l){return l.length?`<li class="note" style="background:none;padding:2px 0">De la teva despensa</li>`+l.map(([id,x])=>`<li>${fi(x.n,40,x.ico||null)}<div class="on"><b>${esc(x.n)}</b><small>${esc(itemSub(x))}${itemSub(x)?' · ':''}${fmtN(x.k)} kcal · P ${fmtC(x.p||0,1)} · H ${fmtC(x.c||0,1)} · G ${fmtC(x.g||0,1)} /100 g</small></div><button class="chip copy" data-loc="${esc(id)}">+</button></li>`).join(''):''}
+let offT=null,offSeq=0;$('ai_q').addEventListener('input',()=>{clearTimeout(offT);const q=$('ai_q').value.trim();if(q.length<3){$('offDay').innerHTML='';return}
+  $('offDay').innerHTML=locHtml(locSearch(q));offT=setTimeout(()=>runOff(q,$('offDay'),'day',locHtml(locSearch(q))),650)});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-loc]');if(!b)return;const id=b.dataset.loc,li=b.closest('li'),x=getFood(id);if(!x)return;
+  const qi=li.querySelector('.offq');if(!qi){b.insertAdjacentHTML('beforebegin',`<input type="number" inputmode="numeric" class="offq" value="${x.racio||100}" aria-label="Grams" style="width:76px;padding:8px">`);b.textContent='Afegeix';return}
+  const q=num(qi.value)||0;if(!q){toast('Posa els grams');return}const it=ensureMine(id),f=q/100;
+  (S.nutricio.days[nDay]=S.nutricio.days[nDay]||[]).push({id:uid(),a:$('n_apat').value,h:curHora(),q:Math.round(q),n:`${it.n} (${Math.round(q)} g)`,k:Math.round(it.k*f),p:r1((it.p||0)*f),c:r1((it.c||0)*f),g:r1((it.g||0)*f),f:it.fb!=null?r1(it.fb*f):0});
+  it.usat=Date.now();it.racio=Math.round(q);save('aliments');save('nutricio');$('offDay').innerHTML='';$('ai_q').value='';toast(`${it.n}: ${fmtN(it.k*f)} kcal afegides`);renderAll()});
 $('ai_web').onclick=()=>{const q=$('ai_q').value.trim().replace(/,?\s*\d+\s*g\b.*$/i,'');if(!q){fErr('ai_q','Escriu el producte que vols buscar');return}runOff(q,$('offDay'),'day')};
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-off]');if(!b)return;const x=OFFR[b.dataset.off];if(!x)return;
   if(b.dataset.offm==='rep'){offFill(x);$('offRep').innerHTML='';return}
@@ -1859,7 +1897,7 @@ document.addEventListener('change',async e=>{if(!e.target.closest||!e.target.clo
 /* ---------- Recordatoris (calendari .ics) ---------- */
 const REMS=[{k:'pes',t:'Pesar-me',h:'07:30',r:'FREQ=DAILY'},{k:'ten',t:'Prendre la tensió',h:'08:00',r:'FREQ=DAILY'},{k:'aig',t:'Beure aigua',h:'11:00',r:'FREQ=DAILY'},{k:'apa',t:'Apuntar els àpats del dia',h:'21:30',r:'FREQ=DAILY'},{k:'tup',t:'Preparar els tuppers de la setmana',h:'11:00',r:'FREQ=WEEKLY;BYDAY=SU'}];
 function remCfg(){try{return JSON.parse(lsGet('salut-rem')||'{}')}catch(e){return{}}}
-function renderRem(){const c=remCfg();$('remList').innerHTML=REMS.map(r=>`<li><label class="chk" style="flex:1"><input type="checkbox" data-remk="${r.k}" ${c[r.k]&&c[r.k].on?'checked':''}> ${r.t}${r.r.includes('WEEKLY')?' <small>(diumenges)</small>':''}</label><input type="time" data-remh="${r.k}" value="${(c[r.k]&&c[r.k].h)||r.h}" aria-label="Hora: ${r.t}" style="width:110px"></li>`).join('');
+function renderRem(){const c=remCfg(),RM={pes:'pes',ten:'ten',aig:'aigua',apa:'nutri',tup:'nutri'};$('remList').innerHTML=REMS.filter(r=>modOn(RM[r.k])).map(r=>`<li><label class="chk" style="flex:1"><input type="checkbox" data-remk="${r.k}" ${c[r.k]&&c[r.k].on?'checked':''}> ${r.t}${r.r.includes('WEEKLY')?' <small>(diumenges)</small>':''}</label><input type="time" data-remh="${r.k}" value="${(c[r.k]&&c[r.k].h)||r.h}" aria-label="Hora: ${r.t}" style="width:110px"></li>`).join('');
   document.querySelectorAll('[data-remk],[data-remh]').forEach(el=>el.onchange=()=>{const c2=remCfg();REMS.forEach(r=>{c2[r.k]={on:$q(`[data-remk="${r.k}"]`).checked,h:$q(`[data-remh="${r.k}"]`).value||r.h}});lsSet('salut-rem',JSON.stringify(c2))});
   $('expRem').checked=lsGet('salut-expRem')!=='0';}
 const $q=sel=>document.querySelector(sel);
@@ -1884,8 +1922,36 @@ $('delAcc').onclick=async()=>{const t=prompt('Això esborrarà el teu compte i T
   try{const {data,error}=await window.SB.functions.invoke('delete-account',{body:{}});if(error||(data&&data.error))throw new Error((error&&error.message)||data.error);try{localStorage.clear()}catch(e){}alert('El teu compte i les teves dades s\'han esborrat.');await window.SB.auth.signOut()}
   catch(e){toast('No s\'ha pogut esborrar: '+e.message)}};
 
+/* ---------- Consells: àpats amb pes en cru ---------- */
+const CING={"arros": ["Arròs", 354, 7, 78, 0.9, 2.8], "pasta": ["Pasta", 357, 12.5, 72, 1.5, 2.3], "llenties": ["Llenties", 336, 24, 49, 1.6, 2.6], "cigrons": ["Cigrons", 364, 19, 61, 6, 2.4], "quinoa": ["Quinoa", 368, 14, 64, 6, 2.7], "patata": ["Patata", 77, 2, 17, 0.1, 0.95], "pollastre": ["Pit de pollastre", 110, 23, 0, 1.5, 0.75], "indiot": ["Pit de gall d'indi", 105, 23, 0, 1.2, 0.75], "vedella": ["Vedella magra", 130, 21, 0, 5, 0.7], "lluc": ["Lluç", 76, 17, 0, 1, 0.8], "salmo": ["Salmó", 208, 20, 0, 13, 0.8], "ous": ["Ous", 143, 12.6, 0.7, 9.5, 1], "verdura": ["Verdures variades", 30, 1.5, 5, 0.3, 0.9], "oli": ["Oli d'oliva", 884, 0, 0, 100, 1], "pa": ["Pa integral", 247, 13, 41, 3.4, 1], "civada": ["Flocs de civada", 389, 17, 66, 7, 1], "iogurt": ["Iogurt natural", 61, 3.5, 4.7, 3.3, 1], "fruita": ["Fruita", 50, 0.5, 12, 0.2, 1], "fsecs": ["Fruits secs", 607, 20, 21, 54, 1], "formatge": ["Formatge fresc", 98, 11, 3.4, 4.3, 1]},CMEALS=[["Esmorzar", "Esmorzar de civada", [["civada", 50], ["iogurt", 200], ["fruita", 120], ["fsecs", 15]]], ["Esmorzar", "Torrades amb ou", [["pa", 70], ["ous", 110], ["verdura", 80], ["oli", 5]]], ["Dinar", "Pollastre amb arròs i verdures", [["pollastre", 150], ["arros", 70], ["verdura", 200], ["oli", 10]]], ["Dinar", "Llenties estofades", [["llenties", 80], ["patata", 100], ["verdura", 150], ["oli", 10]]], ["Dinar", "Pasta amb gall d'indi", [["pasta", 80], ["indiot", 120], ["verdura", 150], ["oli", 10]]], ["Dinar", "Vedella amb quinoa", [["vedella", 140], ["quinoa", 60], ["verdura", 200], ["oli", 10]]], ["Berenar", "Iogurt amb fruita", [["iogurt", 125], ["fruita", 120], ["fsecs", 15]]], ["Berenar", "Entrepà de formatge fresc", [["pa", 60], ["formatge", 60], ["verdura", 50]]], ["Sopar", "Lluç amb patata i verdures", [["lluc", 180], ["patata", 200], ["verdura", 200], ["oli", 10]]], ["Sopar", "Truita amb amanida", [["ous", 165], ["verdura", 200], ["pa", 40], ["oli", 8]]], ["Sopar", "Salmó amb quinoa", [["salmo", 140], ["quinoa", 50], ["verdura", 200]]], ["Sopar", "Cigrons amb espinacs", [["cigrons", 70], ["verdura", 200], ["ous", 55], ["oli", 10]]]],CSHARE={Esmorzar:.25,Dinar:.35,Berenar:.10,Sopar:.30};
+const cookTxt=(k,g)=>{const f=CING[k][5];return f===1?'':` → <b>≈ ${fmtN(Math.round(g*f/5)*5)} g ${f>1?'cuit':'cuinat'}</b>`};
+function mealCalc(ing,target){const base=ing.reduce((a,[k,g])=>a+CING[k][1]*g/100,0),sc=target?target/base:1;
+  const L=ing.map(([k,g])=>{const gg=Math.max(5,Math.round(g*sc/5)*5);return{k,g:gg}});const T=L.reduce((t,{k,g})=>{const v=CING[k],f=g/100;return{k:t.k+v[1]*f,p:t.p+v[2]*f,c:t.c+v[3]*f,g:t.g+v[4]*f}},{k:0,p:0,c:0,g:0});return{L,T}}
+function renderConsells(){if(!$('consBox'))return;const C=S.config,ap=$('cs_ap').value||'Dinar',target=Math.round((C.kcal||2000)*CSHARE[ap]);
+  $('consBox').innerHTML=`<p class="note" style="margin-top:0">Per al teu objectiu de <b>${fmtN(C.kcal)} kcal/dia</b>, un ${ap.toLowerCase()} hauria de tenir unes <b>${fmtN(target)} kcal</b>. Les quantitats són <b>en cru</b> (com les peses abans de cuinar) i al costat tens el pes aproximat un cop cuinat.</p>`+
+  CMEALS.filter(m=>m[0]===ap).map(([,t,ing])=>{const r=mealCalc(ing,target);return `<div class="tcard"><div class="thead"><b style="flex:1">${t}</b><span class="mk">${fmtN(r.T.k)}<small> kcal</small></span></div>
+    <ul class="clist">${r.L.map(({k,g})=>`<li><span>${CING[k][0]}</span><span><b>${fmtN(g)} g</b> en cru${cookTxt(k,g)}</span></li>`).join('')}</ul>
+    <div class="tmac"><span>P <b>${fmtC(r.T.p,1)}</b></span><span>H <b>${fmtC(r.T.c,1)}</b></span><span>G <b>${fmtC(r.T.g,1)}</b></span></div></div>`}).join('');
+  const k=$('cv_ing').value||'arros',g=num($('cv_g').value)||0,f=CING[k][5],dir=$('cv_dir').value;
+  $('cvRes').innerHTML=g?(dir==='c'?`${fmtN(g)} g en cru ≈ <b>${fmtN(Math.round(g*f))} g</b> cuinats`:`${fmtN(g)} g cuinats ≈ <b>${fmtN(Math.round(g/f))} g</b> en cru`)+` <small class="note">(factor ×${fmtC(f,2)})</small>`:''}
+(()=>{$('cv_ing').innerHTML=Object.entries(CING).filter(([,v])=>v[5]!==1).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');['cs_ap','cv_ing','cv_g','cv_dir'].forEach(i=>$(i).addEventListener('input',renderConsells))})();
+
+/* ---------- Mòduls (cada usuari tria què fa servir) ---------- */
+const MODS=[{k:'nutri',t:'Nutrició',d:'Apuntar el que menges, tuppers, despensa i consells'},{k:'aigua',t:'Aigua',d:'Comptador d\'aigua diari'},{k:'pes',t:'Pes i mesures',d:'Pes, composició corporal i mesures'},{k:'act',t:'Activitat',d:'Passos i entrenaments'},{k:'ten',t:'Tensió arterial',d:'Preses de tensió i informe per al metge'}];
+const modOn=k=>!(S.config.mods&&S.config.mods[k]===false);
+function renderModList(){$('modList').innerHTML=MODS.map(m=>`<li><label class="chk" style="flex:1"><input type="checkbox" data-mod="${m.k}" ${modOn(m.k)?'checked':''}><span><b>${m.t}</b><br><small class="note" style="margin:0">${m.d}</small></span></label></li>`).join('');
+  document.querySelectorAll('[data-mod]').forEach(c=>c.onchange=()=>{const on=MODS.filter(m=>document.querySelector(`[data-mod="${m.k}"]`).checked);if(!on.length){c.checked=true;toast('Cal tenir almenys un apartat actiu');return}
+    S.config.mods=Object.fromEntries(MODS.map(m=>[m.k,document.querySelector(`[data-mod="${m.k}"]`).checked]));save('config');applyMods();renderAll()})}
+function applyMods(){const M={pes:'pes',entrenos:'act',tensio:'ten',nutri:'nutri'};let n=0;
+  document.querySelectorAll('.bnav [data-s]').forEach(b=>{const k=M[b.dataset.s];const on=!k||modOn(k);b.hidden=!on;if(on)n++});
+  const bn=document.querySelector('.bnav');if(bn)bn.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  const cur=document.querySelector('main section.on');if(cur&&M[cur.id]&&!modOn(M[cur.id]))show('resum');
+  const Q={menjar:'nutri',aigua:'aigua',pes:'pes',tensio:'ten',entreno:'act',passos:'act'};document.querySelectorAll('[data-q]').forEach(b=>b.hidden=!modOn(Q[b.dataset.q]));
+  const ag=$('aiguaBox');if(ag){const pn=ag.closest('.panel');if(pn)pn.hidden=!modOn('aigua')}
+  document.body.classList.toggle('no-nutri',!modOn('nutri'))}
+
 /* ---------- El meu perfil ---------- */
-function renderProf(){const C=S.config;setV('pf_nom',C.nom||'');setV('pf_alc',S.pes.alcada||'');setV('pf_pobj',S.pes.obj||'');setV('pf_goal',C.objectiu||'mantenir');setV('pf_act',String(C.activitat||1.375));
+function renderProf(){renderModList();const C=S.config;setV('pf_nom',C.nom||'');setV('pf_alc',S.pes.alcada||'');setV('pf_pobj',S.pes.obj||'');setV('pf_goal',C.objectiu||'mantenir');setV('pf_act',String(C.activitat||1.375));
   $('pf_obj').innerHTML=`<div class="kpi"><span>Calories</span><b>${fmtN(C.kcal)}</b><small>kcal/dia</small></div><div class="kpi"><span>Proteïna</span><b>${C.p} g</b></div><div class="kpi"><span>Hidrats</span><b>${C.c} g</b></div><div class="kpi"><span>Greixos</span><b>${C.g} g</b></div><div class="kpi"><span>Fibra</span><b>${C.f||30} g</b></div><div class="kpi"><span>Aigua</span><b>${fmtC((S.aigua.obj||2000)/1000,1)} L</b></div><div class="kpi"><span>Passos</span><b>${fmtN(S.passos.obj)}</b></div>`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-prof]');if(!b)return;renderPerfil();renderProf();openFS('sh_prof')});
 $('pf_nom').onchange=()=>{S.config.nom=$('pf_nom').value.trim()||null;save('config');renderAll()};
@@ -1914,13 +1980,14 @@ $('pl_g').onchange=renderPlan;$('pl_a').onchange=renderPlan;
 $('pl_ok').onclick=()=>{const r=plCur;if(!r)return;const C=S.config;
   Object.assign(C,{kcal:r.kcal,p:r.p,c:r.c,g:r.g,f:r.f,mAuto:true,mPkg:r.G.pk,mGpc:30,ritme:r.G.ritme,objectiu:r.goal,activitat:r.fa,plaData:today()});
   S.aigua.obj=r.aig;S.passos.obj=r.pas;save('config');save('aigua');save('passos');closeFS();toast('Pla desat: '+fmtN(r.kcal)+' kcal/dia');renderAll()};
-$('planBtn').onclick=()=>openPlan(S.config.objectiu,S.config.activitat);
+$('planBtn').onclick=()=>{closeFS();setTimeout(()=>openPlan(S.config.objectiu,S.config.activitat),300)};
 
 /* ---------- Benvinguda (primer cop) ---------- */
 function onbCheck(){if(S.config.onb||S.config.naix||S.pes.items.length||lsGet('salut-onb'))return;openFS('sh_onb','ob_naix')}
 $('ob_go').onclick=()=>{const naix=$('ob_naix').value||null,sexe=$('ob_sexe').value,alc=num($('ob_alc').value),pes=num($('ob_pes').value),obj=num($('ob_obj').value);
-  Object.assign(S.config,{naix,sexe,onb:true});if(alc)S.pes.alcada=alc;if(obj)S.pes.obj=obj;if(pes)S.pes.items.push({id:uid(),data:today(),pes,imc:null});
-  save('config');save('pes');lsSet('salut-onb','1');closeFS();renderAll();setTimeout(()=>openPlan($('ob_g').value,+$('ob_a').value),350)};
+  const mods={};document.querySelectorAll('[data-obm]').forEach(c=>mods[c.dataset.obm]=c.checked);if(!Object.values(mods).some(Boolean))mods.nutri=true;
+  Object.assign(S.config,{naix,sexe,onb:true,mods});if(alc)S.pes.alcada=alc;if(obj)S.pes.obj=obj;if(pes)S.pes.items.push({id:uid(),data:today(),pes,imc:null});
+  save('config');save('pes');lsSet('salut-onb','1');closeFS();renderAll();if(mods.nutri)setTimeout(()=>openPlan($('ob_g').value,+$('ob_a').value),350)};
 $('ob_skip').onclick=()=>{S.config.onb=true;save('config');lsSet('salut-onb','1');closeFS()};
 window.SALUT_USER&&window.SALUT_USER.then(()=>setTimeout(onbCheck,3000));
 
@@ -2019,8 +2086,8 @@ let SAMPLE=null,aiItems=[],aiNota='';
 const withTO=(p,ms=45000)=>Promise.race([p,new Promise((_,ko)=>setTimeout(()=>ko(Object.assign(new Error('timeout'),{code:'timeout'})),ms))]);
 (async()=>{try{if(window.claude&&window.claude.use)SAMPLE=await window.claude.use('sample')}catch(e){}
   if(!SAMPLE){$('ai_go').disabled=true}})();
-function aiErr(e){const c=e&&e.code;return c==='timeout'?'La IA ha trigat massa a respondre. Torna-ho a provar.':c==='not_granted'?'Cal que permetis a l\'app consultar Claude: torna-ho a provar i accepta el permís.':c==='rate_limited'?'Has fet moltes consultes seguides. Espera uns segons i torna-ho a provar.':(c==='parse'||c==='invalid_json'||/JSON/i.test(e&&e.message||''))?'No he entès la resposta de la IA. Torna-ho a provar o escriu-ho d\'una altra manera.':'No s\'ha pogut connectar amb Claude. Comprova la connexió i torna-ho a provar.'}
-$('ai_q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('ai_web').click()}});
+function aiErr(e){const c=e&&e.code;return c==='timeout'?'La IA ha trigat massa a respondre. Torna-ho a provar.':c==='not_granted'?'La IA no està disponible ara mateix. Torna-ho a provar d\'aquí a una estona.':c==='rate_limited'?'Has fet moltes consultes seguides. Espera uns segons i torna-ho a provar.':(c==='parse'||c==='invalid_json'||/JSON/i.test(e&&e.message||''))?'No he entès la resposta de la IA. Torna-ho a provar o escriu-ho d\'una altra manera.':'No s\'ha pogut connectar amb la IA. Comprova que la funció «ai» i la clau de Gemini estiguin configurades.'}
+$('ai_q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('ai_go').click()}});
 $('ai_go').onclick=async()=>{
   const q=$('ai_q').value.trim();if(!q){fErr('ai_q','Escriu què has menjat');return}if(!SAMPLE)return;
   $('ai_go').disabled=true;$('ai_go').textContent='Calculant…';$('aiRes').innerHTML='';
@@ -2105,7 +2172,7 @@ function renderRep(){
       ${open?`<div class="repadd" style="width:100%"><input type="number" inputmode="numeric" id="repG" value="${gr}" aria-label="Grams"><span class="meta">g</span><span class="calc" id="repCalc">${fmtN(x.k*gr/100)} kcal</span><button class="btn" id="repAdd">Afegeix a ${esc($('n_apat').value.toLowerCase())}</button></div>`:''}</li>`}).join('')
     :`<li class="empty">${all.length?'Cap coincidència.':'Encara no hi ha cap aliment. S\'hi desen sols quan calcules amb la IA, i també els pots afegir a dalt amb una foto o el nom.'}</li>`;
   document.querySelectorAll('[data-repopen]').forEach(b=>b.onclick=()=>{repOpen=repOpen===b.dataset.repopen?null:b.dataset.repopen;renderRep();const g=$('repG');if(g){g.focus();g.select()}});
-  document.querySelectorAll('[data-repedit]').forEach(b=>b.onclick=()=>{const x=S.aliments.items[b.dataset.repedit];if(!x)return;repEdit=b.dataset.repedit;
+  document.querySelectorAll('[data-repedit]').forEach(b=>b.onclick=()=>{const rx=S.aliments.items[b.dataset.repedit];if(rx&&rx.ingr&&rx.pesFinal){tpOpen(b.dataset.repedit,'rec');return}const x=S.aliments.items[b.dataset.repedit];if(!x)return;repEdit=b.dataset.repedit;
     $('rep_n').value=x.n;$('rep_m').value=x.marca||'';$('rep_e').value=x.estat||'';$('rep_cat').value=x.cat||'';repIco=x.ico||null;repIcoUpd();$('rep_k').value=x.k??'';$('rep_r').value=x.racio??'';$('rep_p').value=x.p??'';$('rep_c').value=x.c??'';$('rep_g').value=x.g??'';$('rep_f').value=x.fb??'';
     $('repNew').open=true;$('repNew').querySelector('summary').textContent='Edita l\'ingredient';$('rep_save').textContent='Desa els canvis';$('repNew').scrollIntoView({behavior:'smooth',block:'start'})});
   document.querySelectorAll('[data-repdel]').forEach(b=>b.onclick=()=>{const id=b.dataset.repdel,it=S.aliments.items[id];if(!it)return;delete S.aliments.items[id];if(repOpen===id)repOpen=null;save('aliments');renderAll();snack(`${it.n} eliminat`,()=>{S.aliments.items[id]=it;save('aliments');renderAll()})});
@@ -2193,23 +2260,30 @@ const tpTot=l=>l.reduce((t,x)=>({q:t.q+(x.q||0),k:t.k+(x.k||0),p:t.p+(x.p||0),c:
 function tpPer(it){const t=tpTot(it.ingr),n=it.porcions||1;return{q:t.q/n,k:t.k/n,p:t.p/n,c:t.c/n,g:t.g/n,f:t.f/n}}
 function tpRenderForm(){
   $('tpIng').innerHTML=tpD.ingr.length?tpD.ingr.map((x,i)=>`<li>${fi(x.n,28)}<div class="main" style="flex:1"><div><b>${esc(x.n)}</b></div><div class="meta">${fmtN(x.q)} g · ${fmtN(x.k)} kcal</div></div><button class="del" data-tpdel="${i}" aria-label="Treu ${esc(x.n)}">${ic('del')}</button></li>`).join(''):'<li class="empty">Afegeix els ingredients que has fet servir, amb el pes ja cuinat.</li>';
+  if(tpMode==='rec'){const t=tpTot(tpD.ingr),pf=num($('tp_pes').value);$('tpTot').innerHTML=tpD.ingr.length?`<div class="kpis" style="grid-template-columns:1fr 1fr;margin-top:12px"><div class="kpi"><span>Total del plat</span><b>${fmtN(t.k)}</b><small>kcal · ${fmtN(t.q)} g d'ingredients</small></div><div class="kpi"><span>Per 100 g cuinats</span><b>${pf?fmtN(t.k/pf*100):'—'}</b><small>${pf?'kcal':'posa el pes final'}</small></div></div>${pf?`<p class="calc" style="margin:6px 0 0">Per 100 g: proteïna <b>${fmtC(t.p/pf*100,1)} g</b> · hidrats <b>${fmtC(t.c/pf*100,1)} g</b> · greixos <b>${fmtC(t.g/pf*100,1)} g</b></p>`:''}`:'';document.querySelectorAll('[data-tpdel]').forEach(b=>b.onclick=()=>{tpD.ingr.splice(+b.dataset.tpdel,1);tpRenderForm()});return}
   const n=Math.max(1,num($('tp_por').value)||1),t=tpTot(tpD.ingr);
   $('tpTot').innerHTML=tpD.ingr.length?`<div class="kpis" style="grid-template-columns:1fr 1fr;margin-top:12px"><div class="kpi"><span>Total</span><b>${fmtN(t.k)}</b><small>kcal · ${fmtN(t.q)} g</small></div><div class="kpi"><span>Cada tupper</span><b>${fmtN(t.k/n)}</b><small>kcal · ${fmtN(t.q/n)} g</small></div></div>
     <p class="calc" style="margin:6px 0 0">Per tupper: proteïna <b>${fmtC(t.p/n,1)} g</b> · hidrats <b>${fmtC(t.c/n,1)} g</b> · greixos <b>${fmtC(t.g/n,1)} g</b></p>`:'';
   document.querySelectorAll('[data-tpdel]').forEach(b=>b.onclick=()=>{tpD.ingr.splice(+b.dataset.tpdel,1);tpRenderForm()});
 }
-function tpOpen(id){const it=id&&S.tuppers.items[id];tpD={id:id||null,ingr:it?JSON.parse(JSON.stringify(it.ingr)):[]};
-  $('tpTitle').textContent=it?'Edita els tuppers':'Prepara tuppers';$('tp_n').value=it?it.n:'';$('tp_por').value=it?it.porcions:5;$('tp_q').value='';
+let tpMode='tup';
+function tpOpen(id,mode){tpMode=mode||'tup';const rec=tpMode==='rec';$('tpPorL').hidden=rec;$('tpPesL').hidden=!rec;$('tpRecNote').hidden=!rec;const it=!rec&&id&&S.tuppers.items[id];const ri=rec&&id&&S.aliments.items[id];tpD={id:id||null,ingr:it?JSON.parse(JSON.stringify(it.ingr)):ri&&ri.ingr?JSON.parse(JSON.stringify(ri.ingr)):[]};$('tp_pes').value=ri&&ri.pesFinal?ri.pesFinal:'';
+  $('tpTitle').textContent=rec?(ri?'Edita la recepta':'Nova recepta'):it?'Edita els tuppers':'Prepara tuppers';$('tp_n').value=it?it.n:ri?ri.n:'';$('tp_por').value=it?it.porcions:5;$('tp_q').value='';
   const items=[...Object.entries(S.aliments.items),...sharedOnly()].sort((a,b)=>String(a[1].n).localeCompare(String(b[1].n),'ca'));
   $('tp_sel').innerHTML='<option value="">Tria un aliment…</option>'+items.map(([k,x])=>`<option value="${esc(k)}">${fe(x.n,x.ico)} ${esc(x.n)}${x.estat?' ('+ESTAT[x.estat]+')':''}</option>`).join('');
   tpRenderForm();openFS('sh_tup','tp_n')}
 $('tupNew').onclick=()=>tpOpen(null);
-$('tp_por').addEventListener('input',tpRenderForm);
+$('recNew').onclick=()=>tpOpen(null,'rec');
+$('tp_por').addEventListener('input',tpRenderForm);$('tp_pes').addEventListener('input',tpRenderForm);
+function recSave(){const n=$('tp_n').value.trim(),pf=num($('tp_pes').value);if(!n){fErr('tp_n','Posa el nom de la recepta');return}if(!tpD.ingr.length){toast('Afegeix almenys un ingredient');return}if(!pf){fErr('tp_pes','Posa el pes final del plat cuinat');return}
+  const t=tpTot(tpD.ingr),f=100/pf,id=tpD.id||'r'+uid(),old=S.aliments.items[id]||{};
+  S.aliments.items[id]=Object.assign(old,{n,k:Math.round(t.k*f),p:r1(t.p*f),c:r1(t.c*f),g:r1(t.g*f),fb:r1(t.f*f),estat:'cuinat',cat:'plat',font:'recepta',pesFinal:pf,ingr:tpD.ingr.map(x=>({n:x.n,q:r1(x.q),k:r1(x.k),p:r1(x.p),c:r1(x.c),g:r1(x.g),f:r1(x.f)})),usat:Date.now()});
+  save('aliments');closeFS();toast(`Recepta desada: ${fmtN(t.k*f)} kcal/100 g`);renderAll()}
 $('tp_add').onclick=()=>{const it=getFood($('tp_sel').value),q=num($('tp_q').value);if(!it){fErr('tp_sel','Tria un aliment');return}if(!q){fErr('tp_q','Posa els grams');return}const f=q/100;
   tpD.ingr.push({n:it.n,q,k:(it.k||0)*f,p:(it.p||0)*f,c:(it.c||0)*f,g:(it.g||0)*f,f:(it.fb||0)*f});$('tp_sel').value='';$('tp_q').value='';tpRenderForm()};
 $('tp_madd').onclick=()=>{const n=$('tp_mn').value.trim(),k=num($('tp_mk').value),q=num($('tp_mq').value);if(!n){fErr('tp_mn','Posa el nom');return}if(k==null){fErr('tp_mk','Posa les kcal per 100 g');return}if(!q){fErr('tp_mq','Posa els grams');return}const f=q/100;
   tpD.ingr.push({n,q,k:k*f,p:(num($('tp_mp').value)||0)*f,c:(num($('tp_mc').value)||0)*f,g:(num($('tp_mg').value)||0)*f,f:0});['tp_mn','tp_mk','tp_mq','tp_mp','tp_mc','tp_mg'].forEach(i=>$(i).value='');tpRenderForm()};
-$('tp_save').onclick=()=>{const n=$('tp_n').value.trim(),por=Math.round(num($('tp_por').value)||0);if(!n){fErr('tp_n','Posa el nom del plat');return}if(!tpD.ingr.length){toast('Afegeix almenys un ingredient');return}if(por<1){fErr('tp_por','Indica quants tuppers');return}
+$('tp_save').onclick=()=>{if(tpMode==='rec')return recSave();const n=$('tp_n').value.trim(),por=Math.round(num($('tp_por').value)||0);if(!n){fErr('tp_n','Posa el nom del plat');return}if(!tpD.ingr.length){toast('Afegeix almenys un ingredient');return}if(por<1){fErr('tp_por','Indica quants tuppers');return}
   const old=tpD.id&&S.tuppers.items[tpD.id],menjats=old?Math.max(0,(old.porcions||0)-(old.queden||0)):0,id=tpD.id||'t'+uid();
   S.tuppers.items[id]={n,data:old?old.data:today(),ingr:tpD.ingr.map(x=>({n:x.n,q:r1(x.q),k:r1(x.k),p:r1(x.p),c:r1(x.c),g:r1(x.g),f:r1(x.f)})),porcions:por,queden:Math.max(0,por-menjats)};
   save('tuppers');closeFS();toast(old?'Tuppers actualitzats':`${por} tuppers desats`);renderAll()};
@@ -2388,10 +2462,12 @@ function ringHtml(key,lbl,v,goal,col,fmtv,unit,go,gl,lim){gl=gl||fmtN(goal);
   return `<button class="ring${pop}" data-go="${go}" style="--rc:${over?'#F59E0B':col};--off:${off.toFixed(1)}" aria-label="${lbl}: ${fmtv} de ${fmtN(goal)} ${unit}${done?', objectiu assolit':over?', per sobre de l\'objectiu':''}"><span class="rw"><svg viewBox="0 0 74 74" aria-hidden="true"><circle class="tr" cx="37" cy="37" r="32"/><circle class="pr" cx="37" cy="37" r="32"/></svg><span class="rv"><span${String(fmtv).replace(/<[^>]+>/g,'').length>4?' class="sm"':''}>${fmtv}<small>${over?'+'+fmtN(v-goal)+' kcal':'de '+gl}</small></span></span>${done?'<span class="ok" aria-hidden="true">✓</span>':over?'<span class="ok warn" aria-hidden="true">!</span>':''}</span><span class="rl">${lbl}</span></button>`;
 }
 function renderRings(){const t=today(),nt=dayTot(t),ps=S.passos.days[t]||0,ag=S.aigua.days[t]||0,C=S.config;
-  $('rings').innerHTML=ringHtml('kcal','Calories',nt.k,C.kcal,'var(--coral)',fmtN(nt.k),'kcal','nutri',null,true)+ringHtml('prot','Proteïna',nt.p,C.p,'var(--r-prot)',fmtN(nt.p)+' g','g','nutri')
-    +ringHtml('pas','Passos',ps,S.passos.obj,'var(--r-pas)',ps>=1000?fmtC(ps/1000,1)+'k':fmtN(ps),'passos','entrenos')+ringHtml('aig','Aigua',ag,S.aigua.obj||2000,'var(--r-aig)',fmtC(ag/1000,1)+' L','ml','nutri',fmtC((S.aigua.obj||2000)/1000,1)+' L')}
+  const R=[];if(modOn('nutri')){R.push(ringHtml('kcal','Calories',nt.k,C.kcal,'var(--coral)',fmtN(nt.k),'kcal','nutri',null,true));R.push(ringHtml('prot','Proteïna',nt.p,C.p,'var(--r-prot)',fmtN(nt.p)+' g','g','nutri'))}
+  if(modOn('act'))R.push(ringHtml('pas','Passos',ps,S.passos.obj,'var(--r-pas)',ps>=1000?fmtC(ps/1000,1)+'k':fmtN(ps),'passos','entrenos'));
+  if(modOn('aigua'))R.push(ringHtml('aig','Aigua',ag,S.aigua.obj||2000,'var(--r-aig)',fmtC(ag/1000,1)+' L','ml',modOn('nutri')?'nutri':'resum',fmtC((S.aigua.obj||2000)/1000,1)+' L'));
+  $('rings').innerHTML=R.join('');$('rings').style.setProperty('--rn',Math.max(1,R.length));$('rings').hidden=!R.length}
 let rcM=today().slice(0,7),rcSel=null;
-function dayDots(d){const o=[];if((S.nutricio.days[d]||[]).length||S.nutricio.totals[d]||S.aigua.days[d])o.push('var(--v1)');if(S.entrenos.items.some(x=>x.data===d)||S.passos.days[d])o.push('var(--v3)');if(S.pes.items.some(x=>x.data===d))o.push('var(--v2)');if(S.tensio.items.some(x=>x.data===d))o.push('var(--v4)');return o}
+function dayDots(d){const o=[];const _m={nut:modOn('nutri'),act:modOn('act'),pes:modOn('pes'),ten:modOn('ten')};const push0=o.push.bind(o);o.push=c=>{if((c==='var(--v1)'&&!_m.nut)||(c==='var(--v3)'&&!_m.act)||(c==='var(--v2)'&&!_m.pes)||(c==='var(--v4)'&&!_m.ten))return;push0(c)};if((S.nutricio.days[d]||[]).length||S.nutricio.totals[d]||S.aigua.days[d])o.push('var(--v1)');if(S.entrenos.items.some(x=>x.data===d)||S.passos.days[d])o.push('var(--v3)');if(S.pes.items.some(x=>x.data===d))o.push('var(--v2)');if(S.tensio.items.some(x=>x.data===d))o.push('var(--v4)');return o}
 function renderResCal(){
   const [y,m]=rcM.split('-').map(Number),first=new Date(y,m-1,1),nd=new Date(y,m,0).getDate(),off=(first.getDay()+6)%7,td=today();
   let cells=['Dl','Dt','Dc','Dj','Dv','Ds','Dg'].map(d=>`<div class="dh">${d}</div>`).join('')+'<div class="blank"></div>'.repeat(off);
@@ -2435,7 +2511,7 @@ function applyResLayout(){const off=S.config.resumOff||[],box=$('resBlocks');res
   const mv=(k,dlt)=>{const o2=resOrder(),i=o2.indexOf(k),j=i+dlt;if(j<0||j>=o2.length)return;[o2[i],o2[j]]=[o2[j],o2[i]];S.config.resum=o2;save('config');applyResLayout()};
   document.querySelectorAll('[data-rup]').forEach(b=>b.onclick=()=>mv(b.dataset.rup,-1));document.querySelectorAll('[data-rdn]').forEach(b=>b.onclick=()=>mv(b.dataset.rdn,1));}
 function renderInsights(){const t=today(),C=S.config,out=[];
-  if(C.plaData&&C.plaData<=addDays(t,-21)&&!C.adaptAvis){try{const e=estTDEE();if(e&&e.ok)out.push(['ok',`Ja tens prou dades! La teva despesa real és d'uns <b>${fmtN(e.tdee)} kcal/dia</b>. Revisa <b>Nutrició → Objectius</b> per ajustar el pla.`])}catch(err){}}
+  if(C.plaData&&C.plaData<=addDays(t,-21)&&!C.adaptAvis){try{const e=estTDEE();if(e&&e.ok)out.push(['ok',`Ja tens prou dades! La teva despesa real és d'uns <b>${fmtN(e.tdee)} kcal/dia</b>. Revisa els objectius a <b>El meu perfil</b> per ajustar el pla.`])}catch(err){}}
   const closed=[...Array(7)].map((_,i)=>addDays(t,-(i+1))),logged=closed.filter(d=>dayTot(d).k>0);
   const rt=pesRate(pesTrend());if(rt!=null)out.push([rt<=0?'ok':'mid',`El pes ${rt<0?'baixa':'puja'} <b>${fmtC(Math.abs(rt),2)} kg/setmana</b> segons la tendència.`]);
   if(logged.length>=3){const pOk=logged.filter(d=>dayTot(d).p>=C.p*0.9).length,av=logged.reduce((a,d)=>a+dayTot(d).k,0)/logged.length;
@@ -2446,6 +2522,7 @@ function renderInsights(){const t=today(),C=S.config,out=[];
   const tw=tensSorted().filter(x=>x.data>=addDays(t,-6));if(tw.length>=4){const m=tAvg(tw.filter(isMati)),v=tAvg(tw.filter(x=>x.hora&&!isMati(x))),a=tAvg(tw);const hi=a.s>=135||a.d>=85;
     out.push([hi?'hi':'ok',`Tensió: mitjana de 7 dies <b>${a.s}/${a.d}</b>${m&&v?` (matí ${m.s}/${m.d}, vespre ${v.s}/${v.d})`:''}${hi?': per sobre del llindar de 135/85.':'.'}`])}
   const ses=S.entrenos.items.filter(x=>x.data>=addDays(t,-6));if(ses.length)out.push(['ok',`Activitat: <b>${ses.length} ${ses.length===1?'sessió':'sessions'}</b> en 7 dies (${ses.reduce((a,x)=>a+(x.dur||0),0)} min).`]);
+  for(let i=out.length-1;i>=0;i--){const t2=out[i][1];if((/^(Proteïna|Calories|Fibra)/.test(t2)&&!modOn('nutri'))||(/^(Passos|Activitat)/.test(t2)&&!modOn('act'))||(/^Tensió/.test(t2)&&!modOn('ten'))||(/^El pes/.test(t2)&&!modOn('pes')))out.splice(i,1)}
   $('insBox').innerHTML=`<h3>Observacions de la setmana</h3>${out.length?`<ul class="insl">${out.map(([c,tx],ii)=>`<li style="--i:${ii}"><i class="d-${c}"></i><span>${tx}</span></li>`).join('')}</ul>`:'<p class="empty">Quan tinguis uns quants dies de dades, aquí veuràs com va la setmana.</p>'}`}
 function renderResum(){const hn=$('hiName');if(hn)hn.textContent=S.config.nom?`Hola, ${S.config.nom}! `:'';applyResLayout();renderInsights();renderRings();renderResCal();
   const t=today();$('avuiTxt').textContent=fmtDL(t).replace(/^./,c=>c.toUpperCase());
@@ -2466,6 +2543,7 @@ function renderResum(){const hn=$('hiName');if(hn)hn.textContent=S.config.nom?`H
     {s:'entrenos',dom:'--c-act',k:'Entrenaments aquesta setmana',v:wk[7]+'',n:lastEnt?`Últim: ${esc(lastEnt.tipus)}, ${fmtD(lastEnt.data)}`:'Cap sessió encara',sp:sparkBars(wk,'var(--c-act)')},
     {s:'pes',dom:'--c-pes',k:'Cintura',v:lc?`${fmtC(lc.cint)}<small>cm</small>`:'—',n:(()=>{const w=whtr();return w?`Cintura/alçada ${fmtC(w.r,2)} · ${w.cls[0].toLowerCase()}`:(vis?`Greix visceral ${fmtC(vis.visc)}`:'Afegeix-la a Pes')})(),sp:spark(cs.slice(-20).map(x=>x.cint),'var(--c-pes)')}
   ];
+  {const MS={pes:'pes',tensio:'ten',entrenos:'act',nutri:'nutri'};for(let i=rows.length-1;i>=0;i--){const k=MS[rows[i].s];if(k&&!modOn(k))rows.splice(i,1)}}
   $('vitals').innerHTML=rows.map((r,ri)=>`<button class="vital" data-go="${r.s}" ${r.nt?`data-gont="${r.nt}"`:''} style="--dom:var(${r.dom});--i:${ri}"><span class="vk">${r.k}</span><span class="vv num">${r.v}</span><span class="vn">${r.n}</span><span class="vs">${r.sp}</span></button>`).join('');
 }
 
@@ -2498,7 +2576,7 @@ function renderPas(){
   const days=[...Array(14)].map((_,i)=>addDays(t,i-13)),vals=days.map(d=>S.passos.days[d]||0),mx=Math.max(O*1.25,...vals)||1;
   $('pasBars').innerHTML=`<div class="bars"><div class="goal" style="bottom:${O/mx*100}%"></div>${vals.map((x,i)=>`<div class="col" title="${fmtD(days[i])}: ${fmtN(x)} passos"><div style="height:${x/mx*100}%;${x>=O?'':'opacity:.55'}"></div></div>`).join('')}</div><div class="blabels">${days.map((d,i)=>`<span>${i%2?'':new Date(d+'T12:00:00').getDate()}</span>`).join('')}</div><div class="legend"><span><i style="background:var(--amber)"></i>Objectiu</span><span><i style="background:var(--pine)"></i>Objectiu assolit</span></div>`;
 }
-function renderAll(){if(S.config.accent&&S.config.accent!==document.documentElement.dataset.accent){applyAccent(S.config.accent);lsSet('salut-accent',S.config.accent)}[renderExport,renderTuppers,renderFromRep,renderDejuni,renderMacAuto,renderRep,renderAigua,renderWeek,renderQuick,renderTDEE,renderCal,renderPas,renderResum,renderPes,renderEnt,renderTens,renderNutri].forEach(f=>{try{f()}catch(e){diag('renderErr',{f:f.name,m:String(e&&e.message).slice(0,160)});console.error(f.name,e)}})}
+function renderAll(){if(S.config.accent&&S.config.accent!==document.documentElement.dataset.accent){applyAccent(S.config.accent);lsSet('salut-accent',S.config.accent)}[applyMods,renderConsells,renderExport,renderTuppers,renderFromRep,renderDejuni,renderMacAuto,renderRep,renderAigua,renderWeek,renderQuick,renderTDEE,renderCal,renderPas,renderResum,renderPes,renderEnt,renderTens,renderNutri].forEach(f=>{try{f()}catch(e){diag('renderErr',{f:f.name,m:String(e&&e.message).slice(0,160)});console.error(f.name,e)}})}
 let lastDay=today();
 document.addEventListener('visibilitychange',()=>{if(document.hidden)return;const t=today();if(t===lastDay)return;const prev=lastDay;lastDay=t;
   if(nDay===prev){nDay=t;initHora()}['p_data','e_data','t_data','s_data'].forEach(i=>{if($(i)&&$(i).value===prev)$(i).value=t});renderAll()});
