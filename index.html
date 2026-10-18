@@ -1044,7 +1044,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
         <h3>Objectiu adaptatiu de calories</h3>
         <div id="tdeeBox"></div>
       </div>
-    </div></div>
+    </div></div></div>
 <div class="fsh" id="sh_plan" hidden role="dialog" aria-modal="true" aria-label="El teu pla"><div class="fsh-in"><div class="grab" aria-hidden="true"></div>
 <div class="panel"><h3>El teu pla</h3>
   <div class="fields" id="plSel"><label>Què vols aconseguir?<select id="pl_g"><option value="perdre">Perdre greix</option><option value="mantenir" selected>Mantenir-me</option><option value="guanyar">Guanyar múscul</option></select></label>
@@ -2555,7 +2555,7 @@ document.addEventListener('click',e=>{
   if(b.dataset.editent){editSession(b.dataset.editent);return}
   if(b.dataset.editfood){editFood=b.dataset.editfood;renderNutri();return}
   if(b.dataset.del){const k=b.dataset.del,i=S[k].items.findIndex(x=>x.id===b.dataset.id);if(i<0)return;const it=S[k].items[i];S[k].items.splice(i,1);save(k);renderAll();snack('Registre esborrat',()=>{S[k].items.splice(Math.min(i,S[k].items.length),0,it);save(k);renderAll()});return}
-  if(b.dataset.delfood){const d=nDay,a=S.nutricio.days[d]||[],i=a.findIndex(x=>x.id===b.dataset.delfood);if(i<0)return;const it=a[i];S.nutricio.days[d]=a.filter(x=>x.id!==it.id);if(!S.nutricio.days[d].length)delete S.nutricio.days[d];const tu=it.tup&&S.tuppers.items[it.tup];if(tu){tu.queden=Math.min(tu.porcions,tu.queden+1);save('tuppers')}save('nutricio');renderAll();snack(`${String(it.n).replace(/\s*\(.*?g\)\s*$/,'')} esborrat`,()=>{(S.nutricio.days[d]=S.nutricio.days[d]||[]).splice(i,0,it);if(tu){tu.queden=Math.max(0,tu.queden-1);save('tuppers')}save('nutricio');renderAll()});return}
+  if(b.dataset.delfood){editFood=null;const d=nDay,a=S.nutricio.days[d]||[],i=a.findIndex(x=>x.id===b.dataset.delfood);if(i<0)return;const it=a[i];S.nutricio.days[d]=a.filter(x=>x.id!==it.id);if(!S.nutricio.days[d].length)delete S.nutricio.days[d];const tu=it.tup&&S.tuppers.items[it.tup];if(tu){tu.queden=Math.min(tu.porcions,tu.queden+1);save('tuppers')}save('nutricio');renderAll();snack(`${String(it.n).replace(/\s*\(.*?g\)\s*$/,'')} esborrat`,()=>{(S.nutricio.days[d]=S.nutricio.days[d]||[]).splice(i,0,it);if(tu){tu.queden=Math.max(0,tu.queden-1);save('tuppers')}save('nutricio');renderAll()});return}
 });
 
 /* ---------- PASSOS ---------- */
