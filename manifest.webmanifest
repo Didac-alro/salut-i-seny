@@ -1,0 +1,17 @@
+{
+  "name": "Salut i seny",
+  "short_name": "Salut i seny",
+  "description": "El teu seguiment personal de salut: pes, activitat, tensió i nutrició.",
+  "lang": "ca",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F4F5",
+  "theme_color": "#C93F28",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
