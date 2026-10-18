@@ -610,6 +610,8 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 .bnav,.fab{transition:transform .2s ease,opacity .2s ease}
 
 /* Tuppers */
+.tpai{margin-top:12px;padding:12px;border-radius:16px;background:color-mix(in srgb,var(--coral) 6%,var(--surface2))}
+.tpai label{display:flex;flex-direction:column;gap:6px}
 .tprow{display:grid;grid-template-columns:1fr 84px auto;gap:8px;align-items:end;margin-top:8px}
 .tprow .btn{margin:0;padding:12px 14px}
 .tcard{background:var(--surface);border-radius:22px;padding:14px;box-shadow:var(--sh);margin-bottom:10px}
@@ -665,8 +667,8 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.9.5';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["Les fotos d'etiquetes s'envien reduïdes a la IA: més ràpid i sense errors per mida","Si la IA falla, ara t'explica el motiu concret","Corregit: el botó «Tanca la sessió» ara sempre funciona","Corregit: la secció Convida amics es torna a comprovar cada cop que obres la Configuració","Corregit: el botó de tancar la Configuració i el full de novetats","Tria quins apartats fas servir (Nutrició, Aigua, Pes, Activitat, Tensió) a El meu perfil: la resta s'amaga","«Calories i macros» ara es diu «Nutrició»","Els objectius han passat a El meu perfil","Nou apartat Nutrició → Consells: àpats d'exemple amb el pes en cru adaptats al teu objectiu i una calculadora cru ↔ cuinat","Inclou també les novetats de la 2.8.0: IA gratuïta per a plats cuinats i receptes amb pes final"];
+window.APP_VER='2.10.0';window.APP_DATE='2026-10-18';
+window.APP_NEWS=["IA als tuppers i a les receptes: descriu els ingredients («600 g de pollastre, 750 g d'arròs…») i la IA els afegeix amb els valors calculats","Als tuppers entén els pesos com a cuinats; a les receptes, com a crus (tal com es pesen abans de cuinar)","Si l'ingredient ja és a la teva Despensa, fa servir els teus valors exactes"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -1088,6 +1090,11 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   <div class="cfgl" style="margin-top:14px">Ingredients <span style="font-weight:500">(pes cuinat de tot el que has preparat)</span></div>
   <ul class="list" id="tpIng"></ul>
   <div class="tprow"><label>Ingredient<select id="tp_sel"></select></label><label>Grams<input type="number" inputmode="decimal" id="tp_q"></label><button class="btn ghost" id="tp_add" type="button">Afegeix</button></div>
+  <div class="tpai">
+    <label><span style="color:var(--coral)">✨</span> O descriu els ingredients i els calcula la IA<textarea id="tp_aiq" rows="2" placeholder="600 g de pit de pollastre, 750 g d'arròs, 2 cullerades d'oli"></textarea></label>
+    <button class="btn ghost" id="tp_aigo" type="button" style="width:100%;margin-top:8px">✨ Afegeix amb IA</button>
+    <p class="note" id="tp_aimsg" style="margin:6px 0 0"></p>
+  </div>
   <details><summary>Ingredient que no és a Els meus aliments</summary>
     <div class="fields">
       <label class="wide">Nom<input id="tp_mn"></label>
@@ -2262,6 +2269,22 @@ $('rep_save').onclick=()=>{const n=$('rep_n').value.trim(),k=num($('rep_k').valu
   save('aliments');['rep_n','rep_k','rep_r','rep_p','rep_c','rep_g','rep_f','rep_m','rep_e','rep_cat'].forEach(i=>$(i).value='');repIco=null;offImg=null;repIcoUpd();$('repIcoGrid').hidden=true;$('repImg').innerHTML='';repFromPhoto=false;repAI=false;
   $('rep_q').value='';toast(`${n} desat a Els meus aliments`);renderRep()};
 
+/* ---------- IA per als ingredients de tuppers i receptes ---------- */
+$('tp_aigo').onclick=async()=>{const q=$('tp_aiq').value.trim();if(!q){fErr('tp_aiq','Escriu els ingredients');return}
+  if(!SAMPLE){$('tp_aimsg').textContent='La IA no està disponible.';return}
+  const rec=tpMode==='rec',b=$('tp_aigo');b.disabled=true;b.textContent='Calculant…';$('tp_aimsg').textContent='';
+  const pool=[...Object.entries(S.aliments.items),...sharedOnly()].slice(0,120);
+  const ctx=pool.length?`\nREPOSITORI de l'usuari (id: nom · estat):\n${pool.map(([id,x])=>`- ${id}: ${x.n}${x.marca?' ('+x.marca+')':''}${x.estat?' · '+(ESTAT[x.estat]||x.estat):''}`).join('\n')}\nSi un ingredient correspon a un producte del repositori I està en el mateix estat (cru/cuinat/en sec) que el pes indicat, posa'n l'id a "rep". Si no, "rep": null.`:'';
+  try{const r=await withTO(SAMPLE.json(`Ets nutricionista. Aquesta és la llista d'ingredients d'${rec?'una recepta casolana':'uns tuppers'}: «${q}».
+${rec?'Els pesos són TAL COM ES PESEN ABANS DE CUINAR (normalment en CRU o en sec), tret que l\'ingredient digui explícitament «cuit» o «cuinat».':'Aquesta persona pesa els aliments JA CUINATS: interpreta els pesos com a pes CUINAT, tret que digui explícitament «cru» o «en sec».'}
+Separa cada ingredient. Si no hi ha quantitat, fes servir una quantitat raonable (una cullerada d'oli = 10 g, un ou = 55 g). Calcula kcal, proteïna, hidrats, greixos i fibra TOTALS per a aquella quantitat amb taules de composició (BEDCA/USDA), en l'estat indicat.${ctx}
+Respon NOMÉS amb JSON: {"items":[{"n":"nom curt en català (indica cru/cuit si cal)","grams":número,"k":kcal,"p":g,"c":g,"g":g,"f":g,"rep":"id o null"}],"nota":"advertència breu o null"}`,{modelTier:'default'}));
+    const l=(r&&r.items)||[];if(!l.length){$('tp_aimsg').textContent='No he identificat cap ingredient. Prova de descriure-ho d\'una altra manera.';return}
+    l.forEach(x=>{const q2=num(x.grams)||0,it=x.rep&&getFood(x.rep);if(it){const f=q2/100;tpD.ingr.push({n:it.n,q:q2,k:(it.k||0)*f,p:(it.p||0)*f,c:(it.c||0)*f,g:(it.g||0)*f,f:(it.fb||0)*f})}
+      else tpD.ingr.push({n:x.n,q:q2,k:num(x.k)||0,p:num(x.p)||0,c:num(x.c)||0,g:num(x.g)||0,f:num(x.f)||0})});
+    $('tp_aiq').value='';tpRenderForm();$('tp_aimsg').innerHTML=`✓ ${l.length} ${l.length===1?'ingredient afegit':'ingredients afegits'}. <b>Revisa'ls</b> a la llista.${r.nota?' '+esc(r.nota):''}`}
+  catch(e){$('tp_aimsg').textContent=aiErr(e)}finally{b.disabled=false;b.textContent='✨ Afegeix amb IA'}};
+
 /* ---------- Tuppers (plats preparats per a diversos dies) ---------- */
 let tpD={id:null,ingr:[]};
 const tpTot=l=>l.reduce((t,x)=>({q:t.q+(x.q||0),k:t.k+(x.k||0),p:t.p+(x.p||0),c:t.c+(x.c||0),g:t.g+(x.g||0),f:t.f+(x.f||0)}),{q:0,k:0,p:0,c:0,g:0,f:0});
@@ -2279,7 +2302,7 @@ function tpOpen(id,mode){tpMode=mode||'tup';const rec=tpMode==='rec';$('tpPorL')
   $('tpTitle').textContent=rec?(ri?'Edita la recepta':'Nova recepta'):it?'Edita els tuppers':'Prepara tuppers';$('tp_n').value=it?it.n:ri?ri.n:'';$('tp_por').value=it?it.porcions:5;$('tp_q').value='';
   const items=[...Object.entries(S.aliments.items),...sharedOnly()].sort((a,b)=>String(a[1].n).localeCompare(String(b[1].n),'ca'));
   $('tp_sel').innerHTML='<option value="">Tria un aliment…</option>'+items.map(([k,x])=>`<option value="${esc(k)}">${fe(x.n,x.ico)} ${esc(x.n)}${x.estat?' ('+ESTAT[x.estat]+')':''}</option>`).join('');
-  tpRenderForm();openFS('sh_tup','tp_n')}
+  $('tp_aiq').value='';$('tp_aimsg').textContent='';tpRenderForm();openFS('sh_tup','tp_n')}
 $('tupNew').onclick=()=>tpOpen(null);
 $('recNew').onclick=()=>tpOpen(null,'rec');
 $('tp_por').addEventListener('input',tpRenderForm);$('tp_pes').addEventListener('input',tpRenderForm);
