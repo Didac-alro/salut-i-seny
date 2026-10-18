@@ -625,6 +625,8 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 
 .verbox{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.84rem;color:var(--muted);text-align:center}
 .verbox>b{color:var(--ink);font-stretch:115%}
+.shli{display:grid!important;grid-template-columns:44px 1fr;column-gap:12px;align-items:center}
+.shli .chip{grid-column:2;justify-self:end;margin-top:6px}
 .newsl{margin:0 0 14px;padding-left:20px}.newsl li{margin:6px 0}.newsl .nd{list-style:none;margin-left:-20px;color:var(--muted);font-size:.85rem}
 
 /* 2.2.0 */
@@ -646,11 +648,13 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 .remin li{display:flex;align-items:center;gap:10px;padding:6px 0}
 .chk{display:flex;align-items:center;gap:10px;flex-direction:row!important;color:var(--ink)!important;font-size:.92rem!important;font-weight:600!important}
 @media (prefers-reduced-motion:reduce){.scanframe i{animation:none}}
+
+.auth [hidden],#privBox[hidden]{display:none!important}
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.2.0';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["Escàner de codis de barres en directe: només cal apuntar amb la càmera","Fotos reals dels productes d'Open Food Facts a Els meus aliments i al registre","Cerca mentre escrius, amb Nutri-Score i els productes d'Espanya primer","Lectura de la taula nutricional amb una foto, sense IA i gratuïta","Recordatoris al calendari del mòbil (pes, tensió, aigua, àpats i tuppers)","App molt més lleugera: s'obre més ràpid","Recordatori de còpia de seguretat cada 3 mesos (es pot desactivar)"];
+window.APP_VER='2.5.0';window.APP_DATE='2026-10-18';
+window.APP_NEWS=["Notificacions: rep els recordatoris (pes, tensió, aigua, àpats i tuppers) com a avisos de l'app","Els avisos són intel·ligents: si ja t'has pesat o pres la tensió avui, no t'ho recorda","El recordatori del sopar et diu quantes kcal portes"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -665,11 +669,26 @@ window.APP_NEWS=["Escàner de codis de barres en directe: només cal apuntar amb
   function showAuth(){ready(()=>{$('auth').hidden=false;document.body.classList.add('noscroll')})}
   function hideAuth(){ready(()=>{$('auth').hidden=true;document.body.classList.remove('noscroll')})}
   function msg(t,ok){const m=$('au_msg');m.textContent=t||'';m.style.color=ok?'var(--pine)':'var(--berry)'}
-  sb.auth.getSession().then(({data})=>{if(data.session){uRes(data.session.user);hideAuth()}else showAuth()});
-  sb.auth.onAuthStateChange((ev,session)=>{if(ev==='SIGNED_IN'&&session){uRes(session.user);hideAuth()}if(ev==='SIGNED_OUT'){try{localStorage.removeItem('salut-cache')}catch(e){}location.reload()}if(ev==='PASSWORD_RECOVERY'){const p=prompt('Escriu la nova contrasenya (mínim 8 caràcters):');if(p&&p.length>=8)sb.auth.updateUser({password:p}).then(({error})=>alert(error?'No s\'ha pogut canviar: '+error.message:'Contrasenya canviada.'))}});
+  sb.auth.getSession().then(({data})=>{if(mode!=='login')return;if(data.session){uRes(data.session.user);hideAuth()}else showAuth()});
+  const linkType=(/type=(invite|recovery|signup)/.exec(location.hash)||[])[1]||null;
+  let mode=linkType==='invite'?'invite':linkType==='recovery'?'recovery':'login';
+  function setPassMode(m){mode=m;ready(()=>{$('auth').hidden=false;document.body.classList.add('noscroll');$('au_mail').closest('label').hidden=true;$('au_forgot').hidden=true;$('au_inv').hidden=true;
+    $('authSub').textContent=m==='invite'?'Benvingut/da! Crea la teva contrasenya per entrar.':'Escriu la teva contrasenya nova.';$('au_go').textContent='Desa la contrasenya';$('au_pass').autocomplete='new-password';$('au_privL').hidden=m!=='invite'})}
+  if(mode!=='login')setPassMode(mode);
+  sb.auth.onAuthStateChange((ev,session)=>{if(ev==='PASSWORD_RECOVERY'){setPassMode('recovery');return}
+    if(ev==='SIGNED_IN'&&session){if(mode!=='login')return;uRes(session.user);hideAuth()}
+    if(ev==='SIGNED_OUT'){try{localStorage.removeItem('salut-cache')}catch(e){}location.href=location.origin+location.pathname}});
   document.addEventListener('DOMContentLoaded',()=>{
-    $('au_mode').onclick=()=>{signup=!signup;$('au_go').textContent=signup?'Crea el compte':'Entra';$('au_mode').textContent=signup?'Ja tens compte? Entra':'No tens compte? Crea\'n un';$('authSub').textContent=signup?'Crea el teu compte personal':'Entra amb el teu compte';$('au_pass').autocomplete=signup?'new-password':'current-password';msg('')};
-    const go=async()=>{const email=$('au_mail').value.trim(),password=$('au_pass').value;if(!email||!password){msg('Escriu el correu i la contrasenya.');return}if(signup&&password.length<8){msg('La contrasenya ha de tenir almenys 8 caràcters.');return}
+    $('au_mode').onclick=()=>{signup=!signup;$('au_privL').hidden=!signup;$('au_go').textContent=signup?'Crea el compte':'Entra';$('au_mode').textContent=signup?'Ja tens compte? Entra':'No tens compte? Crea\'n un';$('authSub').textContent=signup?'Crea el teu compte personal':'Entra amb el teu compte';$('au_pass').autocomplete=signup?'new-password':'current-password';msg('')};
+    $('au_privB').onclick=()=>{$('privBox').hidden=false};$('privClose').onclick=()=>{$('privBox').hidden=true};
+    if(cfg.ALLOW_SIGNUP){$('au_mode').hidden=false;$('au_inv').hidden=true}
+    const setPass=async()=>{const password=$('au_pass').value;if(password.length<8){msg('La contrasenya ha de tenir almenys 8 caràcters.');return}
+      if(mode==='invite'&&!$('au_priv').checked){msg('Per continuar, has d\'acceptar la política de privacitat.');return}
+      $('au_go').disabled=true;const {data,error}=await sb.auth.updateUser({password});$('au_go').disabled=false;
+      if(error){msg('Error: '+error.message);return}history.replaceState(null,'',location.pathname);
+      if(mode==='invite')try{localStorage.setItem('salut-priv',new Date().toISOString())}catch(e){}
+      mode='login';uRes(data.user);hideAuth();$('au_mail').closest('label').hidden=false;$('au_forgot').hidden=false};
+    const go=async()=>{if(mode!=='login')return setPass();const email=$('au_mail').value.trim(),password=$('au_pass').value;if(!email||!password){msg('Escriu el correu i la contrasenya.');return}if(signup&&password.length<8){msg('La contrasenya ha de tenir almenys 8 caràcters.');return}if(signup&&!$('au_priv').checked){msg('Per continuar, has d\'acceptar la política de privacitat.');return}
       $('au_go').disabled=true;msg('');
       try{if(signup){const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;if(!data.session)msg('Compte creat. Revisa el correu i confirma l\'adreça per entrar.',true)}
         else{const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error}}
@@ -701,6 +720,17 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 </script>
 </head>
 <body class="boot">
+<div id="privBox" class="auth" hidden style="z-index:110;overflow:auto;place-items:start center"><div class="auth-in" style="max-width:560px;padding:20px 0">
+  <h1 style="font-size:1.5rem">Política de privacitat</h1>
+  <p><b>Què es guarda:</b> les dades que tu introdueixes a l'app (pes, mesures, tensió, activitat, alimentació, perfil) i el teu correu electrònic.</p>
+  <p><b>Per a què:</b> només per mostrar-te el teu seguiment de salut. No es fan servir per a cap altra finalitat, no es venen ni es comparteixen amb ningú.</p>
+  <p><b>On:</b> a una base de dades de Supabase amb servidors a la Unió Europea (Irlanda), protegida amb contrasenya i xifratge. Cada usuari només pot veure les seves pròpies dades; ni tan sols la persona que gestiona l'app les pot consultar des de l'app.</p>
+  <p><b>Base d'aliments comuna:</b> els aliments que afegeixes a «Els meus aliments» (nom, marca i valors nutricionals per 100 g) es comparteixen amb els altres usuaris per fer créixer la base. <u>No</u> es comparteix què menges, ni quan, ni cap altra dada teva.</p>
+  <p><b>Serveis externs:</b> quan cerques un producte, el text de la cerca o el codi de barres s'envia a Open Food Facts (base de dades pública). Cap dada personal ni de salut s'hi envia.</p>
+  <p><b>Els teus drets:</b> pots exportar totes les teves dades (Exporta a Excel) i esborrar el teu compte i totes les dades en qualsevol moment des de Configuració. L'esborrat és definitiu.</p>
+  <p><b>Base legal:</b> el teu consentiment explícit, que pots retirar esborrant el compte.</p>
+  <button class="btn" id="privClose" style="width:100%">Tanca</button>
+</div></div>
 <div id="auth" class="auth" hidden>
   <div class="auth-in">
     <div class="auth-logo" aria-hidden="true"><svg viewBox="0 0 120 40"><path d="M0 22 H38 l6 0 l4 -14 l6 26 l5 -18 l4 6 H120" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -710,7 +740,9 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     <label style="margin-top:10px">Contrasenya<input type="password" id="au_pass" autocomplete="current-password" minlength="8"></label>
     <div id="au_msg" class="note" role="alert" aria-live="polite"></div>
     <button class="btn" id="au_go" style="width:100%">Entra</button>
-    <button class="btn ghost" id="au_mode" style="width:100%">No tens compte? Crea'n un</button>
+    <label class="chk" id="au_privL" hidden style="margin:4px 0 8px"><input type="checkbox" id="au_priv"> He llegit i accepto la <button type="button" class="linkb" id="au_privB" style="padding:0">política de privacitat</button></label>
+    <button class="btn ghost" id="au_mode" style="width:100%" hidden>No tens compte? Crea'n un</button>
+    <p class="note" id="au_inv" style="text-align:center">L'app és només per invitació. Si no tens compte, demana a qui te l'ha recomanada que et convidi.</p>
     <button class="linkb" id="au_forgot">He oblidat la contrasenya</button>
   </div>
 </div>
@@ -922,6 +954,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
         </div>
         <button class="btn" id="rep_save">Desa</button>
       </details>
+      <div class="seg" role="radiogroup" aria-label="Quins aliments" style="margin-top:12px"><button role="radio" data-scope="mine">Els meus</button><button role="radio" data-scope="shared">Base comuna</button></div>
       <div class="catgrid" id="catGrid" role="tablist" aria-label="Tipologies d'aliments"></div>
       <input id="rep_q" style="margin-top:12px" placeholder="Busca als meus aliments" aria-label="Busca als meus aliments">
       <ul class="list" id="repList" style="margin-top:8px"></ul>
@@ -973,6 +1006,20 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 <button class="fab" id="fab" aria-label="Afegeix ràpid" aria-haspopup="dialog"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg></button>
 <div class="sheet-bg" id="sheetBg" hidden></div>
 <div class="sheet-bg" id="fsBg" hidden></div>
+<div class="fsh" id="sh_onb" hidden role="dialog" aria-modal="true" aria-label="Benvinguda"><div class="fsh-in"><div class="grab" aria-hidden="true"></div>
+<div class="panel"><h3>Benvingut/da a Salut i seny</h3>
+  <p class="note" style="margin-top:0">Explica'ns una mica de tu perquè l'app calculi bé els teus objectius. Ho pots canviar quan vulguis a Pes → Registre.</p>
+  <div class="fields">
+    <label>Data de naixement<input type="date" id="ob_naix"></label>
+    <label>Sexe<select id="ob_sexe"><option value="">—</option><option value="h">Home</option><option value="d">Dona</option></select></label>
+    <label>Alçada (cm)<input type="number" inputmode="numeric" id="ob_alc"></label>
+    <label>Pes actual (kg)<input type="number" step="0.1" inputmode="decimal" id="ob_pes"></label>
+    <label class="wide">Pes objectiu (kg, opcional)<input type="number" step="0.1" inputmode="decimal" id="ob_obj"></label>
+  </div>
+  <p class="note">Consell: afegeix l'app a la pantalla d'inici des del menú de Chrome (⋮ → Afegeix a la pantalla d'inici) per tenir-la com una app més.</p>
+  <button class="btn" id="ob_go" type="button" style="width:100%">Comença</button>
+  <button class="linkb" id="ob_skip" type="button" style="width:100%">Ara no</button>
+</div></div></div>
 <div class="scan" id="scanOv" hidden role="dialog" aria-modal="true" aria-label="Escàner de codis de barres">
   <video id="scanVid" playsinline muted></video>
   <div class="scanframe" aria-hidden="true"><i></i></div>
@@ -1026,15 +1073,27 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   </div>
   <p class="note">El tema i l'estil d'icones es guarden en aquest dispositiu. El color principal es guarda al teu compte i s'aplica a tots els dispositius.</p>
   <div class="cfgl" style="margin-top:18px">Recordatoris</div>
-  <p class="note" style="margin-top:0">Tria els recordatoris i afegeix-los al calendari del mòbil. T'avisarà encara que l'app estigui tancada.</p>
+  <p class="note" style="margin-top:0">Tria els recordatoris i l'hora. Pots rebre'ls com a <b>notificacions</b> de l'app o afegir-los al calendari del mòbil.</p>
   <ul class="list remin" id="remList"></ul>
-  <button class="btn ghost" id="remAdd" style="width:100%">Afegeix-los al calendari</button>
+  <div id="pushBox"><button class="btn" id="pushOn" style="width:100%">Activa les notificacions</button>
+    <div id="pushSt" class="note"></div>
+    <button class="linkb" id="pushTest" type="button" hidden>Envia'm una notificació de prova</button></div>
+  <button class="btn ghost" id="remAdd" style="width:100%;margin-top:8px">O afegeix-los al calendari</button>
   <label class="chk" style="margin-top:12px"><input type="checkbox" id="expRem"> Recorda'm fer una còpia de seguretat cada 3 mesos</label>
   <div class="cfgl" style="margin-top:18px">Compte</div>
   <p class="note" id="cfgMail" style="margin-top:0"></p>
   <label class="qbtn" for="impFile" style="flex-direction:row;justify-content:center;min-height:52px">Importa una còpia de seguretat (JSON)</label>
   <input type="file" accept="application/json,.json" id="impFile" class="vh">
   <button class="btn ghost" id="logoutBtn" style="width:100%;margin-top:10px">Tanca la sessió</button>
+  <div id="invBox" hidden>
+    <div class="cfgl" style="margin-top:18px">Convida amics</div>
+    <p class="note" style="margin-top:0">Rebran un correu amb l'enllaç per crear la contrasenya i instal·lar l'app. Cadascú només veu les seves dades.</p>
+    <div class="tprow" style="grid-template-columns:1fr auto"><label>Correu del teu amic<input type="email" id="invMail" inputmode="email" autocomplete="off"></label><button class="btn" id="invGo" type="button">Convida</button></div>
+    <ul class="list" id="invList" style="margin-top:10px"></ul>
+  </div>
+  <div class="cfgl" style="margin-top:18px">Privacitat</div>
+  <button class="linkb" id="privOpen" type="button" style="padding:4px 0">Llegeix la política de privacitat</button>
+  <button class="btn ghost" id="delAcc" type="button" style="width:100%;margin-top:8px;color:var(--berry);border-color:var(--berry)">Esborra el meu compte i totes les dades</button>
   <div class="verbox"><b>Salut i seny</b><span>Versió <b id="verN"></b> · <span id="verD"></span></span><button class="linkb" id="verNews" type="button">Què hi ha de nou?</button></div>
 </div></div></div>
 <div class="fsh" id="sh_pes" hidden role="dialog" aria-modal="true" aria-label="Nou registre de pes" style="--acc:var(--c-pes)"><div class="fsh-in"><div class="grab" aria-hidden="true"></div><button class="fsh-x del" data-fsclose aria-label="Tanca"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></svg></button>
@@ -1159,7 +1218,7 @@ applyAccent(lsGet('salut-accent'));
 applyTheme(lsGet('salut-theme'));
 $('refBtn').onclick=()=>refreshAll();
 $('snackU').onclick=()=>{const f=snackFn;snackFn=null;$('snack').hidden=true;clearTimeout(snackT);if(f){f();toast('Desfet')}};
-$('themeBtn').onclick=()=>{renderFsetPrev();renderRem();openFS('sh_cfg');window.SALUT_USER&&window.SALUT_USER.then(u=>{$('cfgMail').textContent='Sessió iniciada com a '+u.email})};
+$('themeBtn').onclick=()=>{renderFsetPrev();renderRem();pushState().catch(()=>{});invInit();openFS('sh_cfg');window.SALUT_USER&&window.SALUT_USER.then(u=>{$('cfgMail').textContent='Sessió iniciada com a '+u.email})};
 $('logoutBtn').onclick=()=>{if(window.SB)window.SB.auth.signOut()};
 $('impFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text());const d=j.docs||j;let n=0;
   Object.keys(DEF).forEach(k=>{if(d[k]){S[k]=Object.assign(JSON.parse(JSON.stringify(DEF[k])),d[k]);save(k);n++}});saveLocal();renderAll();toast(`Còpia importada: ${n} apartats`)}catch(err){toast('El fitxer no és una còpia vàlida')}};
@@ -1170,7 +1229,7 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{const t=b.datas
 document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{const a=b.dataset.acc;lsSet('salut-accent',a);applyAccent(a);S.config.accent=a;save('config');hap();ecgPulse()});
 
 /* ---------- estat i desament ---------- */
-const DEF={passos:{days:{},obj:10000},pes:{items:[],obj:null},entrenos:{items:[]},tensio:{items:[]},nutricio:{days:{},totals:{}},config:{kcal:2000,p:140,c:200,g:65,f:30,ritme:null,naix:'1988-05-22',sexe:''},aigua:{days:{},obj:2000,got:250},aliments:{items:{}},tuppers:{items:{}},dejuni:{protocol:16,actiu:null,hist:[]}};
+const DEF={passos:{days:{},obj:10000},pes:{items:[],obj:null},entrenos:{items:[]},tensio:{items:[]},nutricio:{days:{},totals:{}},config:{kcal:2000,p:140,c:200,g:65,f:30,ritme:null,naix:null,sexe:''},aigua:{days:{},obj:2000,got:250},aliments:{items:{}},tuppers:{items:{}},dejuni:{protocol:16,actiu:null,hist:[]}};
 const S=JSON.parse(JSON.stringify(DEF));
 const KEYS=Object.keys(DEF);
 let DB=null,UID=null;const chains={},pend={},lastW={},refT={},dirty=new Set();
@@ -1203,7 +1262,7 @@ function fErr(id,msg){const e=$(id);if(e){e.classList.add('err');e.setAttribute(
 function setV(id,v){const e=$(id);if(e&&document.activeElement!==e)e.value=v}
 function setSync(t){const e=$('sync');e.dataset.st=/Desant/.test(t)?'busy':/Només/.test(t)?'local':'ok';e.title=t;e.setAttribute('aria-label','Estat: '+t.toLowerCase())}
 function save(k){
-  if(k==='nutricio')prune();
+  if(k==='nutricio')prune();if(k==='aliments')shareQueue();
   saveLocal();
   if(!DB||!UID)return;
   const ref=DB.collection('data/users/'+UID).doc(k);
@@ -1752,6 +1811,26 @@ function showNews(upd){$('newsT').textContent=(upd?'Actualitzada a la versió ':
 $('verNews').onclick=()=>showNews(false);
 (()=>{const prev=lsGet('salut-ver');if(prev!==window.APP_VER){lsSet('salut-ver',window.APP_VER);if(prev)window.SALUT_USER&&window.SALUT_USER.then(()=>setTimeout(()=>showNews(true),900))}})();
 
+/* ---------- Notificacions push ---------- */
+const VAPID_PUBLIC='BHHz0c1xT_vKS1iaD3XeJCm1izotT9PMgOcpCvUpUE98_A8mUQ8ecy92HKyMvxT93yZVJC_zDfpOwpdiPbfbKCI';
+const b64u=s=>{const p='='.repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...b].map(c=>c.charCodeAt(0)))};
+const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+function remSel(){const c=remCfg();return REMS.filter(r=>c[r.k]&&c[r.k].on).map(r=>({k:r.k,t:r.t,h:(c[r.k].h||r.h),w:r.r.includes('WEEKLY')?0:null}))}
+async function pushState(){if(!pushOk()){$('pushOn').hidden=true;$('pushSt').textContent='Aquest navegador no admet notificacions. Fes servir el calendari. (A l\'iPhone cal instal·lar l\'app a la pantalla d\'inici.)';return null}
+  const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+  $('pushOn').textContent=sub?'Desactiva les notificacions':'Activa les notificacions';$('pushOn').classList.toggle('ghost',!!sub);$('pushTest').hidden=!sub;
+  $('pushSt').textContent=Notification.permission==='denied'?'Has bloquejat les notificacions. Activa-les a la configuració de Chrome per a aquest lloc.':sub?'✓ Notificacions activades en aquest dispositiu.':'';return sub}
+async function pushSave(sub){const u=await window.SALUT_USER;const j=sub.toJSON();
+  const {error}=await window.SB.from('push_subs').upsert({endpoint:j.endpoint,user_id:u.id,sub:j,rems:remSel(),tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Madrid',updated_at:new Date().toISOString()});if(error)throw error}
+$('pushOn').onclick=async()=>{try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+  if(sub){await window.SB.from('push_subs').delete().eq('endpoint',sub.endpoint);await sub.unsubscribe();toast('Notificacions desactivades');return pushState()}
+  if(!remSel().length){toast('Tria primer almenys un recordatori');return}
+  const perm=await Notification.requestPermission();if(perm!=='granted'){pushState();return}
+  sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUBLIC)});await pushSave(sub);toast('Notificacions activades');pushState()}
+  catch(e){toast('No s\'han pogut activar: '+(e.message||e))}};
+$('pushTest').onclick=async()=>{try{const {data,error}=await window.SB.functions.invoke('push',{body:{test:true}});if(error||(data&&data.error))throw new Error((error&&error.message)||data.error);toast('Notificació enviada')}catch(e){toast('No s\'ha pogut enviar: '+e.message)}};
+document.addEventListener('change',async e=>{if(!e.target.closest||!e.target.closest('#remList')||!pushOk())return;try{const sub=await (await navigator.serviceWorker.ready).pushManager.getSubscription();if(sub)await pushSave(sub)}catch(err){}});
+
 /* ---------- Recordatoris (calendari .ics) ---------- */
 const REMS=[{k:'pes',t:'Pesar-me',h:'07:30',r:'FREQ=DAILY'},{k:'ten',t:'Prendre la tensió',h:'08:00',r:'FREQ=DAILY'},{k:'aig',t:'Beure aigua',h:'11:00',r:'FREQ=DAILY'},{k:'apa',t:'Apuntar els àpats del dia',h:'21:30',r:'FREQ=DAILY'},{k:'tup',t:'Preparar els tuppers de la setmana',h:'11:00',r:'FREQ=WEEKLY;BYDAY=SU'}];
 function remCfg(){try{return JSON.parse(lsGet('salut-rem')||'{}')}catch(e){return{}}}
@@ -1765,6 +1844,28 @@ $('remAdd').onclick=async()=>{const sel=REMS.filter(r=>$q(`[data-remk="${r.k}"]`
   const ev=sel.map(r=>{const h=($q(`[data-remh="${r.k}"]`).value||r.h).replace(':','');return ['BEGIN:VEVENT',`UID:salut-${r.k}-${Date.now()}@salut-i-seny`,`DTSTAMP:${stamp}`,`DTSTART:${day}T${h}00`,'DURATION:PT10M',`RRULE:${r.r}`,`SUMMARY:${r.t} · Salut i seny`,`DESCRIPTION:Obre l'app: ${url}`,'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${r.t}`,'TRIGGER:PT0M','END:VALARM','END:VEVENT'].join('\r\n')});
   const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Salut i seny//CA','CALSCALE:GREGORIAN',...ev,'END:VCALENDAR'].join('\r\n');
   try{await DL.save({filename:'salut-recordatoris.ics',data:new Blob([ics],{type:'text/calendar'})});toast('Obre el fitxer per afegir-los al calendari')}catch(e){toast('No s\'ha pogut crear el fitxer')}};
+
+/* ---------- Compte: invitacions, privacitat i esborrat ---------- */
+let invChecked=false;
+async function invCall(body){const {data,error}=await window.SB.functions.invoke('invite',{body});if(error)throw new Error(error.message||'error');if(data&&data.error)throw new Error(data.error);return data||{}}
+async function invInit(){if(invChecked||!window.SB)return;invChecked=true;try{const d=await invCall({check:true});if(d.admin){$('invBox').hidden=false;invList()}}catch(e){}}
+async function invList(){try{const d=await invCall({list:true});const l=d.users||[];
+  $('invList').innerHTML=l.length?l.map(u=>`<li><div class="main" style="flex:1"><div>${esc(u.email)}</div><div class="meta">${u.actiu?'Actiu · últim accés '+fmtD(String(u.last).slice(0,10)):'Invitació enviada el '+fmtD(String(u.invited).slice(0,10))}</div></div></li>`).join(''):'<li class="empty">Encara no has convidat ningú.</li>'}catch(e){}}
+$('invGo').onclick=async()=>{const email=$('invMail').value.trim();if(!/^\S+@\S+\.\S+$/.test(email)){fErr('invMail','Escriu un correu vàlid');return}
+  $('invGo').disabled=true;try{await invCall({email,redirectTo:location.origin+location.pathname});$('invMail').value='';toast('Invitació enviada a '+email);invList()}
+  catch(e){toast(/already|registered|exists/i.test(e.message)?'Aquest correu ja té compte':'No s\'ha pogut enviar: '+e.message)}finally{$('invGo').disabled=false}};
+$('privOpen').onclick=()=>{$('privBox').hidden=false};
+$('delAcc').onclick=async()=>{const t=prompt('Això esborrarà el teu compte i TOTES les teves dades de manera definitiva.\n\nSi n\'estàs segur/a, escriu ESBORRA:');if(t!=='ESBORRA')return;
+  try{const {data,error}=await window.SB.functions.invoke('delete-account',{body:{}});if(error||(data&&data.error))throw new Error((error&&error.message)||data.error);try{localStorage.clear()}catch(e){}alert('El teu compte i les teves dades s\'han esborrat.');await window.SB.auth.signOut()}
+  catch(e){toast('No s\'ha pogut esborrar: '+e.message)}};
+
+/* ---------- Benvinguda (primer cop) ---------- */
+function onbCheck(){if(S.config.onb||S.config.naix||S.pes.items.length||lsGet('salut-onb'))return;openFS('sh_onb','ob_naix')}
+$('ob_go').onclick=()=>{const naix=$('ob_naix').value||null,sexe=$('ob_sexe').value,alc=num($('ob_alc').value),pes=num($('ob_pes').value),obj=num($('ob_obj').value);
+  Object.assign(S.config,{naix,sexe,onb:true});if(alc)S.pes.alcada=alc;if(obj)S.pes.obj=obj;if(pes)S.pes.items.push({id:uid(),data:today(),pes,imc:null});
+  save('config');save('pes');lsSet('salut-onb','1');closeFS();toast('Perfil desat. Benvingut/da!');renderAll()};
+$('ob_skip').onclick=()=>{S.config.onb=true;save('config');lsSet('salut-onb','1');closeFS()};
+window.SALUT_USER&&window.SALUT_USER.then(()=>setTimeout(onbCheck,3000));
 
 /* ---------- Full d'afegir ràpid ---------- */
 let sheetPrev=null;
@@ -1930,12 +2031,16 @@ function repUpsert(it){ // it: {n,k,p,c,g per 100 g, racio, font}
   S.aliments.items[id]=Object.assign({},old,it,{usat:Date.now()});return id;
 }
 let repOpen=null,repCat=null;
+let repScope='mine';
 function renderRep(){
-  const q=normN($('rep_q').value),all=Object.entries(S.aliments.items).sort((a,b)=>String(a[1].n).localeCompare(String(b[1].n),'ca'));
+  document.querySelectorAll('[data-scope]').forEach(b=>{b.setAttribute('aria-checked',String(b.dataset.scope===repScope));b.textContent=b.dataset.scope==='mine'?`Els meus (${Object.keys(S.aliments.items).length})`:`Base comuna (${sharedOnly().length})`;b.onclick=()=>{repScope=b.dataset.scope;repCat=null;repOpen=null;renderRep()}});
+  const q=normN($('rep_q').value),all=(repScope==='shared'?sharedOnly():Object.entries(S.aliments.items)).sort((a,b)=>String(a[1].n).localeCompare(String(b[1].n),'ca'));
   const counts={};all.forEach(([,x])=>{const c=catOf(x);counts[c]=(counts[c]||0)+1});
   $('catGrid').innerHTML=`<button class="cat ${!repCat?'on':''}" data-cat="" role="tab" aria-selected="${!repCat}"><span class="ct">${fi('-',30,'fork-and-knife-with-plate')}</span><span class="cn">Tots</span><span class="cc">${all.length}</span></button>`+CATS.filter(c=>counts[c[0]]).map(c=>`<button class="cat ${repCat===c[0]?'on':''}" data-cat="${c[0]}" role="tab" aria-selected="${repCat===c[0]}"><span class="ct">${fi('-',30,c[2])}</span><span class="cn">${c[1]}</span><span class="cc">${counts[c[0]]}</span></button>`).join('');
   document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{repCat=b.dataset.cat||null;repOpen=null;renderRep()});
   const l=all.filter(([,x])=>(!repCat||catOf(x)===repCat)&&(!q||normN(x.n+' '+(x.marca||'')).includes(q))).slice(0,80);
+  if(repScope==='shared'){$('repList').innerHTML=l.length?l.map(([id,x])=>`<li class="shli"><span class="fitile">${fi(x.n,30,x.ico||null)}</span><div class="main" style="flex:1"><div><b>${esc(x.n)}</b>${itemSub(x)?` <span class="sub2">${esc(itemSub(x))}</span>`:''}</div><div class="meta"><b style="color:var(--ink)">${fmtN(x.k)} kcal</b> · P ${fmtC(x.p||0,1)} · H ${fmtC(x.c||0,1)} · G ${fmtC(x.g||0,1)} per 100 g</div></div><button class="chip copy" data-shadd="${esc(id)}">Afegeix als meus</button></li>`).join(''):`<li class="empty">${shLoaded?'Encara no hi ha aliments d\'altres usuaris que no tinguis.':'Carregant la base comuna…'}</li>`;
+    document.querySelectorAll('[data-shadd]').forEach(b=>b.onclick=()=>{const x=ensureMine(b.dataset.shadd);if(x){toast(`${x.n} afegit als teus aliments`);renderAll()}});return}
   $('repList').innerHTML=l.length?l.map(([id,x])=>{
     const open=repOpen===id,gr=x.racio||100;
     return `<li style="flex-wrap:wrap"><span class="fitile">${fi(x.n,30,x.ico||null)}</span><div class="main" style="flex:1"><div><b>${esc(x.n)}</b>${itemSub(x)?` <span class="sub2">${esc(itemSub(x))}</span>`:''}${x.font==='etiqueta'?' <span class="badge b-ok">etiqueta</span>':x.font==='ia'?' <span class="badge b-info">IA</span>':''}</div><div class="meta"><b style="color:var(--ink)">${fmtN(x.k)} kcal</b> · P ${x.p!=null?fmtC(x.p,1):'—'} · H ${x.c!=null?fmtC(x.c,1):'—'} · G ${x.g!=null?fmtC(x.g,1):'—'} · F ${x.fb!=null?fmtC(x.fb,1):'—'} <span style="opacity:.8">per 100 g</span></div>${x.racio?`<div class="meta">Ració ${x.racio} g = ${fmtN(x.k*x.racio/100)} kcal · P ${fmtC((x.p||0)*x.racio/100,1)} g</div>`:''}</div>
@@ -2038,12 +2143,12 @@ function tpRenderForm(){
 }
 function tpOpen(id){const it=id&&S.tuppers.items[id];tpD={id:id||null,ingr:it?JSON.parse(JSON.stringify(it.ingr)):[]};
   $('tpTitle').textContent=it?'Edita els tuppers':'Prepara tuppers';$('tp_n').value=it?it.n:'';$('tp_por').value=it?it.porcions:5;$('tp_q').value='';
-  const items=Object.entries(S.aliments.items).sort((a,b)=>String(a[1].n).localeCompare(String(b[1].n),'ca'));
+  const items=[...Object.entries(S.aliments.items),...sharedOnly()].sort((a,b)=>String(a[1].n).localeCompare(String(b[1].n),'ca'));
   $('tp_sel').innerHTML='<option value="">Tria un aliment…</option>'+items.map(([k,x])=>`<option value="${esc(k)}">${fe(x.n,x.ico)} ${esc(x.n)}${x.estat?' ('+ESTAT[x.estat]+')':''}</option>`).join('');
   tpRenderForm();openFS('sh_tup','tp_n')}
 $('tupNew').onclick=()=>tpOpen(null);
 $('tp_por').addEventListener('input',tpRenderForm);
-$('tp_add').onclick=()=>{const it=S.aliments.items[$('tp_sel').value],q=num($('tp_q').value);if(!it){fErr('tp_sel','Tria un aliment');return}if(!q){fErr('tp_q','Posa els grams');return}const f=q/100;
+$('tp_add').onclick=()=>{const it=getFood($('tp_sel').value),q=num($('tp_q').value);if(!it){fErr('tp_sel','Tria un aliment');return}if(!q){fErr('tp_q','Posa els grams');return}const f=q/100;
   tpD.ingr.push({n:it.n,q,k:(it.k||0)*f,p:(it.p||0)*f,c:(it.c||0)*f,g:(it.g||0)*f,f:(it.fb||0)*f});$('tp_sel').value='';$('tp_q').value='';tpRenderForm()};
 $('tp_madd').onclick=()=>{const n=$('tp_mn').value.trim(),k=num($('tp_mk').value),q=num($('tp_mq').value);if(!n){fErr('tp_mn','Posa el nom');return}if(k==null){fErr('tp_mk','Posa les kcal per 100 g');return}if(!q){fErr('tp_mq','Posa els grams');return}const f=q/100;
   tpD.ingr.push({n,q,k:k*f,p:(num($('tp_mp').value)||0)*f,c:(num($('tp_mc').value)||0)*f,g:(num($('tp_mg').value)||0)*f,f:0});['tp_mn','tp_mk','tp_mq','tp_mp','tp_mc','tp_mg'].forEach(i=>$(i).value='');tpRenderForm()};
@@ -2068,26 +2173,43 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   if(b.dataset.tpeat)tupEat(b.dataset.tpeat);else if(b.dataset.tpedit)tpOpen(b.dataset.tpedit);
   else{const id=b.dataset.tprm,it=S.tuppers.items[id];delete S.tuppers.items[id];save('tuppers');renderAll();snack(`${it.n} esborrat`,()=>{S.tuppers.items[id]=it;save('tuppers');renderAll()})}});
 
+/* ---------- Base d'aliments comuna (compartida entre usuaris) ---------- */
+let SHARED={},shT=null,shLoaded=false,myUid=null;
+const SHF=['n','marca','estat','cat','ico','img','k','p','c','g','fb','racio','font'];
+const shPick=x=>{const o={};SHF.forEach(f=>{if(x[f]!=null&&x[f]!=='')o[f]=x[f]});return o};
+async function loadShared(){if(!window.SB||!window.SALUT_USER)return;try{const u=await window.SALUT_USER;myUid=u.id;
+  const {data,error}=await window.SB.from('shared_foods').select('id,v,created_by').limit(5000);if(error)throw error;
+  SHARED={};(data||[]).forEach(r=>{SHARED[r.id]=Object.assign({},r.v,{_mine:r.created_by===u.id})});shLoaded=true;renderAll();shareQueue()}catch(e){}}
+function shareQueue(){clearTimeout(shT);shT=setTimeout(shareSync,2500)}
+async function shareSync(){if(!shLoaded||!window.SB)return;const rows=[];
+  Object.entries(S.aliments.items).forEach(([id,x])=>{if(!x||!x.n||x.k==null)return;const v=shPick(x),cur=SHARED[id];
+    if(!cur){rows.push({id,v,created_by:myUid})}else if(cur._mine&&JSON.stringify(shPick(cur))!==JSON.stringify(v)){rows.push({id,v,created_by:myUid})}});
+  for(const r of rows){try{const {error}=await window.SB.from('shared_foods').upsert(r);if(!error)SHARED[r.id]=Object.assign({},r.v,{_mine:true})}catch(e){}}}
+function getFood(id){return S.aliments.items[id]||SHARED[id]||null}
+function ensureMine(id){if(!S.aliments.items[id]&&SHARED[id]){S.aliments.items[id]=Object.assign(shPick(SHARED[id]),{usat:Date.now()});save('aliments')}return S.aliments.items[id]}
+function sharedOnly(){return Object.entries(SHARED).filter(([id])=>!S.aliments.items[id])}
+setTimeout(loadShared,0);
+
 /* ---------- Afegir des d'Els meus aliments ---------- */
 function renderFromRep(){
   const sel=$('fr_sel');if(!sel)return;const cur=sel.value;
   const items=Object.entries(S.aliments.items).sort((a,b)=>(b[1].usat||0)-(a[1].usat||0)||String(a[1].n).localeCompare(String(b[1].n),'ca'));
   const grp={};items.forEach(([id,x])=>{(grp[catOf(x)]=grp[catOf(x)]||[]).push([id,x])});
-  sel.innerHTML=`<option value="">${items.length?'Tria un aliment…':'Encara no tens aliments desats'}</option>`+CATS.filter(c=>grp[c[0]]).map(c=>`<optgroup label="${c[1]}">${grp[c[0]].map(([id,x])=>`<option value="${esc(id)}">${fe(x.n,x.ico)} ${esc(x.n)}${x.estat?' ('+ESTAT[x.estat]+')':''} · ${fmtN(x.k)}</option>`).join('')}</optgroup>`).join('');
-  if(cur&&S.aliments.items[cur])sel.value=cur;sel.disabled=!items.length;frCalc();
+  sel.innerHTML=`<option value="">${items.length?'Tria un aliment…':'Encara no tens aliments desats'}</option>`+CATS.filter(c=>grp[c[0]]).map(c=>`<optgroup label="${c[1]}">${grp[c[0]].map(([id,x])=>`<option value="${esc(id)}">${fe(x.n,x.ico)} ${esc(x.n)}${x.estat?' ('+ESTAT[x.estat]+')':''} · ${fmtN(x.k)}</option>`).join('')}</optgroup>`).join('')+(()=>{const sh=sharedOnly().sort((a,b)=>String(a[1].n).localeCompare(String(b[1].n),'ca'));return sh.length?`<optgroup label="Base comuna (${sh.length})">${sh.map(([id,x])=>`<option value="${esc(id)}">${fe(x.n,x.ico)} ${esc(x.n)}${x.marca?' · '+esc(x.marca):''} · ${fmtN(x.k)}</option>`).join('')}</optgroup>`:''})();
+  if(cur&&getFood(cur))sel.value=cur;sel.disabled=!items.length&&!sharedOnly().length;frCalc();
 }
 function frCalc(){
-  const it=S.aliments.items[$('fr_sel').value],q=num($('fr_q').value)||0;
+  const it=getFood($('fr_sel').value),q=num($('fr_q').value)||0;
   $('fr_add').disabled=!it||!q;
   if(!it){$('fr_calc').innerHTML='';return}
   const f=q/100;
   $('fr_calc').innerHTML=q?`<b>${fmtN(it.k*f)} kcal</b><br>P ${fmtC((it.p||0)*f,1)} · H ${fmtC((it.c||0)*f,1)} · G ${fmtC((it.g||0)*f,1)}${it.fb!=null?' · F '+fmtC(it.fb*f,1):''}`:'Indica els grams';
 }
-$('fr_sel').onchange=()=>{const it=S.aliments.items[$('fr_sel').value];$('fr_q').value=it?(it.racio||100):'';frCalc();if(it)$('fr_q').focus()};
+$('fr_sel').onchange=()=>{const it=getFood($('fr_sel').value);$('fr_q').value=it?(it.racio||100):'';frCalc();if(it)$('fr_q').focus()};
 $('fr_q').addEventListener('input',frCalc);
 $('fr_q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('fr_add').disabled)$('fr_add').click()});
 $('fr_add').onclick=()=>{
-  const id=$('fr_sel').value,it=S.aliments.items[id],q=num($('fr_q').value);
+  const id=$('fr_sel').value,it=ensureMine(id),q=num($('fr_q').value);
   if(!it){fErr('fr_sel','Tria un aliment');return}if(!q){fErr('fr_q','Indica els grams');return}
   const f=q/100;
   (S.nutricio.days[nDay]=S.nutricio.days[nDay]||[]).push({id:uid(),a:$('n_apat').value,h:curHora(),q:Math.round(q),n:`${it.n} (${Math.round(q)} g)`,k:Math.round(it.k*f),p:r1((it.p||0)*f),c:r1((it.c||0)*f),g:r1((it.g||0)*f),f:it.fb!=null?r1(it.fb*f):0});
