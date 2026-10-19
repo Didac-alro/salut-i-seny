@@ -667,8 +667,8 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.10.0';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["IA als tuppers i a les receptes: descriu els ingredients («600 g de pollastre, 750 g d'arròs…») i la IA els afegeix amb els valors calculats","Als tuppers entén els pesos com a cuinats; a les receptes, com a crus (tal com es pesen abans de cuinar)","Si l'ingredient ja és a la teva Despensa, fa servir els teus valors exactes"];
+window.APP_VER='2.10.1';window.APP_DATE='2026-10-18';
+window.APP_NEWS=["Privacitat: cada usuari només veu les seves dades encara que comparteixin dispositiu, i els usuaris nous comencen amb el perfil buit","La importació de còpies JSON només la pot fer l'administrador","IA als tuppers i a les receptes: descriu els ingredients («600 g de pollastre, 750 g d'arròs…») i la IA els afegeix amb els valors calculats","Als tuppers entén els pesos com a cuinats; a les receptes, com a crus (tal com es pesen abans de cuinar)","Si l'ingredient ja és a la teva Despensa, fa servir els teus valors exactes"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -679,18 +679,22 @@ window.APP_NEWS=["IA als tuppers i a les receptes: descriu els ingredients («60
   if(!cfg.SUPABASE_URL||!cfg.SUPABASE_ANON_KEY||!window.supabase){document.addEventListener('DOMContentLoaded',()=>{const a=$('auth');a.hidden=false;$('authSub').textContent='Falta configurar Supabase al fitxer config.js (mira la GUIA).';['au_go','au_mode','au_forgot'].forEach(i=>$(i).disabled=true)});window.claude={use:async()=>null};return}
   const sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});window.SB=sb;
   let uRes;const userReady=new Promise(r=>uRes=r);let signup=false;
+  const PERUSER=['salut-cache','salut-onb','salut-rem','salut-priv','salut-expRem'];
+  function claim(u){try{const own=localStorage.getItem('salut-cache-uid');
+    if(own!==u.id){const had=PERUSER.some(k=>localStorage.getItem(k)!=null);PERUSER.forEach(k=>localStorage.removeItem(k));localStorage.setItem('salut-cache-uid',u.id);if(had){location.reload();return false}}}catch(e){}return true}
+  function okUser(u){if(claim(u)){uRes(u);hideAuth()}}
   const ready=f=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',f):f();
   function showAuth(){ready(()=>{$('auth').hidden=false;document.body.classList.add('noscroll')})}
   function hideAuth(){ready(()=>{$('auth').hidden=true;document.body.classList.remove('noscroll')})}
   function msg(t,ok){const m=$('au_msg');m.textContent=t||'';m.style.color=ok?'var(--pine)':'var(--berry)'}
-  sb.auth.getSession().then(({data})=>{if(mode!=='login')return;if(data.session){uRes(data.session.user);hideAuth()}else showAuth()});
+  sb.auth.getSession().then(({data})=>{if(mode!=='login')return;if(data.session)okUser(data.session.user);else{try{PERUSER.forEach(k=>localStorage.removeItem(k));localStorage.removeItem('salut-cache-uid')}catch(e){}showAuth()}});
   const linkType=(/type=(invite|recovery|signup)/.exec(location.hash)||[])[1]||null;
   let mode=linkType==='invite'?'invite':linkType==='recovery'?'recovery':'login';
   function setPassMode(m){mode=m;ready(()=>{$('auth').hidden=false;document.body.classList.add('noscroll');$('au_mail').closest('label').hidden=true;$('au_forgot').hidden=true;$('au_inv').hidden=true;
     $('authSub').textContent=m==='invite'?'Benvingut/da! Crea la teva contrasenya per entrar.':'Escriu la teva contrasenya nova.';$('au_go').textContent='Desa la contrasenya';$('au_pass').autocomplete='new-password';$('au_privL').hidden=m!=='invite'})}
   if(mode!=='login')setPassMode(mode);
   sb.auth.onAuthStateChange((ev,session)=>{if(ev==='PASSWORD_RECOVERY'){setPassMode('recovery');return}
-    if(ev==='SIGNED_IN'&&session){if(mode!=='login')return;uRes(session.user);hideAuth()}
+    if(ev==='SIGNED_IN'&&session){if(mode!=='login')return;okUser(session.user)}
     if(ev==='SIGNED_OUT'){try{localStorage.removeItem('salut-cache')}catch(e){}location.href=location.origin+location.pathname}});
   document.addEventListener('DOMContentLoaded',()=>{
     $('au_mode').onclick=()=>{signup=!signup;$('au_privL').hidden=!signup;$('au_go').textContent=signup?'Crea el compte':'Entra';$('au_mode').textContent=signup?'Ja tens compte? Entra':'No tens compte? Crea\'n un';$('authSub').textContent=signup?'Crea el teu compte personal':'Entra amb el teu compte';$('au_pass').autocomplete=signup?'new-password':'current-password';msg('')};
@@ -701,7 +705,7 @@ window.APP_NEWS=["IA als tuppers i a les receptes: descriu els ingredients («60
       $('au_go').disabled=true;const {data,error}=await sb.auth.updateUser({password});$('au_go').disabled=false;
       if(error){msg('Error: '+error.message);return}history.replaceState(null,'',location.pathname);
       if(mode==='invite')try{localStorage.setItem('salut-priv',new Date().toISOString())}catch(e){}
-      mode='login';uRes(data.user);hideAuth();$('au_mail').closest('label').hidden=false;$('au_forgot').hidden=false};
+      mode='login';$('au_mail').closest('label').hidden=false;$('au_forgot').hidden=false;okUser(data.user);$('au_mail').closest('label').hidden=false;$('au_forgot').hidden=false};
     const go=async()=>{if(mode!=='login')return setPass();const email=$('au_mail').value.trim(),password=$('au_pass').value;if(!email||!password){msg('Escriu el correu i la contrasenya.');return}if(signup&&password.length<8){msg('La contrasenya ha de tenir almenys 8 caràcters.');return}if(signup&&!$('au_priv').checked){msg('Per continuar, has d\'acceptar la política de privacitat.');return}
       $('au_go').disabled=true;msg('');
       try{if(signup){const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;if(!data.session)msg('Compte creat. Revisa el correu i confirma l\'adreça per entrar.',true)}
@@ -1146,7 +1150,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   <label class="chk" style="margin-top:12px"><input type="checkbox" id="expRem"> Recorda'm fer una còpia de seguretat cada 3 mesos</label>
   <div class="cfgl" style="margin-top:18px">Compte</div>
   <p class="note" id="cfgMail" style="margin-top:0"></p>
-  <label class="qbtn" for="impFile" style="flex-direction:row;justify-content:center;min-height:52px">Importa una còpia de seguretat (JSON)</label>
+  <label class="qbtn" for="impFile" id="impLbl" hidden style="flex-direction:row;justify-content:center;min-height:52px">Importa una còpia de seguretat (JSON)</label>
   <input type="file" accept="application/json,.json" id="impFile" class="vh">
   <button class="btn ghost" id="logoutBtn" style="width:100%;margin-top:10px">Tanca la sessió</button>
   <div id="invBox" hidden>
@@ -1348,7 +1352,7 @@ async function initDB(){
     const snaps=await Promise.all(KEYS.map(k=>db.collection('data/users/'+id).doc(k).get().catch(()=>null)));
     let anyRemote=false;
     snaps.forEach((s,i)=>{if(s&&s.exists){anyRemote=true;const d=s.data();if(d&&d.v)S[KEYS[i]]=Object.assign(JSON.parse(JSON.stringify(DEF[KEYS[i]])),JSON.parse(JSON.stringify(d.v)))}});
-    if(!anyRemote){ // primera vegada: puja el que hi hagi en local
+    if(false){ // versió publicada: mai es pugen dades locals d'un altre usuari
       const hasLocal=(S.dejuni.hist||[]).length||Object.keys(S.aliments.items).length||Object.keys(S.aigua.days).length||Object.keys(S.passos.days).length||S.pes.items.length||S.entrenos.items.length||S.tensio.items.length||Object.keys(S.nutricio.days).length;
       if(hasLocal){for(const k of KEYS)save(k)}
     }
@@ -1926,7 +1930,7 @@ $('remAdd').onclick=async()=>{const sel=REMS.filter(r=>$q(`[data-remk="${r.k}"]`
 /* ---------- Compte: invitacions, privacitat i esborrat ---------- */
 let invChecked=false;
 async function invCall(body){const {data,error}=await window.SB.functions.invoke('invite',{body});if(error)throw new Error(error.message||'error');if(data&&data.error)throw new Error(data.error);return data||{}}
-async function invInit(){if(invChecked||!window.SB)return;try{const d=await invCall({check:true});invChecked=true;if(d.admin){$('invBox').hidden=false;invList()}else console.info('Convida amics: aquest usuari no és administrador (revisa el secret ADMIN_EMAILS)')}catch(e){console.warn('Convida amics: no s\'ha pogut comprovar (funció «invite»):',e.message)}}
+async function invInit(){if(invChecked||!window.SB)return;try{const d=await invCall({check:true});invChecked=true;if(d.admin){$('invBox').hidden=false;$('impLbl').hidden=false;invList()}else console.info('Convida amics: aquest usuari no és administrador (revisa el secret ADMIN_EMAILS)')}catch(e){console.warn('Convida amics: no s\'ha pogut comprovar (funció «invite»):',e.message)}}
 async function invList(){try{const d=await invCall({list:true});const l=d.users||[];
   $('invList').innerHTML=l.length?l.map(u=>`<li><div class="main" style="flex:1"><div>${esc(u.email)}</div><div class="meta">${u.actiu?'Actiu · últim accés '+fmtD(String(u.last).slice(0,10)):'Invitació enviada el '+fmtD(String(u.invited).slice(0,10))}</div></div></li>`).join(''):'<li class="empty">Encara no has convidat ningú.</li>'}catch(e){}}
 $('invGo').onclick=async()=>{const email=$('invMail').value.trim();if(!/^\S+@\S+\.\S+$/.test(email)){fErr('invMail','Escriu un correu vàlid');return}
@@ -2004,7 +2008,7 @@ $('ob_go').onclick=()=>{const naix=$('ob_naix').value||null,sexe=$('ob_sexe').va
   Object.assign(S.config,{naix,sexe,onb:true,mods});if(alc)S.pes.alcada=alc;if(obj)S.pes.obj=obj;if(pes)S.pes.items.push({id:uid(),data:today(),pes,imc:null});
   save('config');save('pes');lsSet('salut-onb','1');closeFS();renderAll();if(mods.nutri)setTimeout(()=>openPlan($('ob_g').value,+$('ob_a').value),350)};
 $('ob_skip').onclick=()=>{S.config.onb=true;save('config');lsSet('salut-onb','1');closeFS()};
-window.SALUT_USER&&window.SALUT_USER.then(()=>setTimeout(onbCheck,3000));
+window.SALUT_USER&&window.SALUT_USER.then(()=>setTimeout(onbCheck,1800));
 
 /* ---------- Full d'afegir ràpid ---------- */
 let sheetPrev=null;
