@@ -664,11 +664,17 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 .bnav [data-s][hidden]{display:none!important}
 
 [hidden]{display:none!important}
+
+.newst{display:block;font-size:.95rem;font-weight:700;color:var(--coral);margin-top:4px}
+
+.pushhelp{margin-top:8px;background:var(--surface2);border-radius:14px;padding:10px 12px}
+.pushhelp summary{font-weight:700;cursor:pointer}
+.pushhelp ol{margin:8px 0 0;padding-left:20px}.pushhelp li{margin:5px 0;line-height:1.4}
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.10.1';window.APP_DATE='2026-10-18';
-window.APP_NEWS=["Privacitat: cada usuari només veu les seves dades encara que comparteixin dispositiu, i els usuaris nous comencen amb el perfil buit","La importació de còpies JSON només la pot fer l'administrador","IA als tuppers i a les receptes: descriu els ingredients («600 g de pollastre, 750 g d'arròs…») i la IA els afegeix amb els valors calculats","Als tuppers entén els pesos com a cuinats; a les receptes, com a crus (tal com es pesen abans de cuinar)","Si l'ingredient ja és a la teva Despensa, fa servir els teus valors exactes"];
+window.APP_VER='2.10.2';window.APP_TITLE='Privacitat i notificacions';window.APP_DATE='2026-10-19';
+window.APP_NEWS=["Privacitat reforçada: cada usuari només veu les seves dades encara que comparteixin dispositiu, i els usuaris nous comencen amb el perfil buit","La importació de còpies JSON només la pot fer l'administrador","Ajuda nova a Configuració → Recordatoris: com activar les notificacions a Chrome","Cada actualització mostra el seu nom i les novetats en entrar per primer cop","IA als tuppers i a les receptes: descriu els ingredients i la IA els afegeix amb els valors calculats","Corregit: «Desfés» després d'esborrar un aliment des de l'edició"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -1145,7 +1151,23 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   <ul class="list remin" id="remList"></ul>
   <div id="pushBox"><button class="btn" id="pushOn" style="width:100%">Activa les notificacions</button>
     <div id="pushSt" class="note"></div>
-    <button class="linkb" id="pushTest" type="button" hidden>Envia'm una notificació de prova</button></div>
+    <button class="linkb" id="pushTest" type="button" hidden>Envia'm una notificació de prova</button>
+    <details class="pushhelp" id="pushHelp"><summary>Com activar les notificacions a Chrome</summary>
+      <ol>
+        <li>Tria a dalt els recordatoris que vols i a quina hora.</li>
+        <li>Toca <b>Activa les notificacions</b>.</li>
+        <li>Chrome et preguntarà si <i>Salut i seny</i> et pot enviar notificacions: toca <b>Permet</b>.</li>
+        <li>Toca <b>Envia'm una notificació de prova</b> per comprovar que t'arriben.</li>
+      </ol>
+      <p class="note" style="margin:6px 0 4px"><b>Si no et surt la pregunta o les havies bloquejat:</b></p>
+      <ol>
+        <li>Amb l'app oberta a Chrome, toca la icona que hi ha a l'esquerra de l'adreça (el <b>cadenat</b> o les <b>barres de configuració</b>). Si tens l'app a la pantalla d'inici, obre-la des de Chrome per fer aquest pas.</li>
+        <li>Toca <b>Permisos</b> (o <b>Configuració del lloc</b>).</li>
+        <li>A <b>Notificacions</b>, tria <b>Permet</b>.</li>
+        <li>Torna a l'app i toca <b>Activa les notificacions</b>.</li>
+      </ol>
+      <p class="note" style="margin:6px 0 0">Les notificacions s'activen per a cada dispositiu. Si fas servir l'app en més d'un, activa-les a tots.</p>
+    </details></div>
   <button class="btn ghost" id="remAdd" style="width:100%;margin-top:8px">O afegeix-los al calendari</button>
   <label class="chk" style="margin-top:12px"><input type="checkbox" id="expRem"> Recorda'm fer una còpia de seguretat cada 3 mesos</label>
   <div class="cfgl" style="margin-top:18px">Compte</div>
@@ -1887,11 +1909,11 @@ $('bc_cam').onchange=onBarcode;$('bc_gal').onchange=onBarcode;
 
 /* ---------- Versió de l'app i novetats ---------- */
 const fmtVD=d=>new Date(d+'T12:00:00').toLocaleDateString('ca-ES',{day:'numeric',month:'long',year:'numeric'});
-$('verN').textContent=window.APP_VER;$('verD').textContent=fmtVD(window.APP_DATE);
-function showNews(upd){$('newsT').textContent=(upd?'Actualitzada a la versió ':'Novetats de la versió ')+window.APP_VER;
+$('verN').textContent=window.APP_VER+(window.APP_TITLE?' · '+window.APP_TITLE:'');$('verD').textContent=fmtVD(window.APP_DATE);
+function showNews(upd){$('newsT').innerHTML=(upd?'Actualitzada a la versió ':'Novetats de la versió ')+esc(window.APP_VER)+(window.APP_TITLE?`<span class="newst">${esc(window.APP_TITLE)}</span>`:'');
   $('newsL').innerHTML=`<li class="nd">${fmtVD(window.APP_DATE)}</li>`+window.APP_NEWS.map(t=>`<li>${esc(t)}</li>`).join('');openFS('sh_news')}
 $('verNews').onclick=()=>showNews(false);
-(()=>{const prev=lsGet('salut-ver');if(prev!==window.APP_VER){lsSet('salut-ver',window.APP_VER);if(prev)window.SALUT_USER&&window.SALUT_USER.then(()=>setTimeout(()=>showNews(true),900))}})();
+(()=>{const prev=lsGet('salut-ver');if(prev!==window.APP_VER&&window.SALUT_USER)window.SALUT_USER.then(()=>setTimeout(()=>{if(lsGet('salut-ver')===window.APP_VER)return;lsSet('salut-ver',window.APP_VER);if(prev)showNews(true)},900))})();
 
 /* ---------- Notificacions push ---------- */
 const VAPID_PUBLIC='BHHz0c1xT_vKS1iaD3XeJCm1izotT9PMgOcpCvUpUE98_A8mUQ8ecy92HKyMvxT93yZVJC_zDfpOwpdiPbfbKCI';
@@ -1901,7 +1923,7 @@ function remSel(){const c=remCfg();return REMS.filter(r=>c[r.k]&&c[r.k].on).map(
 async function pushState(){if(!pushOk()){$('pushOn').hidden=true;$('pushSt').textContent='Aquest navegador no admet notificacions. Fes servir el calendari. (A l\'iPhone cal instal·lar l\'app a la pantalla d\'inici.)';return null}
   const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
   $('pushOn').textContent=sub?'Desactiva les notificacions':'Activa les notificacions';$('pushOn').classList.toggle('ghost',!!sub);$('pushTest').hidden=!sub;
-  $('pushSt').textContent=Notification.permission==='denied'?'Has bloquejat les notificacions. Activa-les a la configuració de Chrome per a aquest lloc.':sub?'✓ Notificacions activades en aquest dispositiu.':'';return sub}
+  if(Notification.permission==='denied')$('pushHelp').open=true;$('pushSt').textContent=Notification.permission==='denied'?'Has bloquejat les notificacions. Mira a sota com tornar-les a activar a Chrome.':sub?'✓ Notificacions activades en aquest dispositiu.':'';return sub}
 async function pushSave(sub){const u=await window.SALUT_USER;const j=sub.toJSON();
   const {error}=await window.SB.from('push_subs').upsert({endpoint:j.endpoint,user_id:u.id,sub:j,rems:remSel(),tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Madrid',updated_at:new Date().toISOString()});if(error)throw error}
 $('pushOn').onclick=async()=>{try{const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
