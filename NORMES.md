@@ -6,6 +6,8 @@ Aquest document recull les decisions de disseny, dades i funcionament de l'app. 
 - **Mòbil primer.** Tot es dissenya i es prova primer al mòbil. A l'ordinador l'app es mostra com una columna de mòbil centrada.
 - **En català**, amb un to proper, frases curtes i noms d'aliments curts.
 - **Privacitat per sobre de tot.** Cada usuari només veu i modifica les seves dades.
+- **Perspectiva de gènere.** L'app parla a cada persona com vol: en masculí, en femení o en neutre (El meu perfil → «Com vols que et parlem?»; per defecte, segons el sexe). Mentre no se sap, els textos són **neutres** («Et donem la benvinguda»). Mai es fan servir formes amb barra (benvingut/da).
+- **Sexe per als càlculs:** home, dona o no binari / prefereixo no dir-ho. En aquest últim cas, els càlculs fan servir una mitjana (metabolisme basal, mínim de 1.350 kcal) i no es mostra el rang de greix.
 - **Menys text, més visual.** Si una dada es pot entendre amb un color, una barra o una icona, no s'explica amb una frase.
 
 ## 2. Disseny
@@ -25,6 +27,7 @@ Aquest document recull les decisions de disseny, dades i funcionament de l'app. 
 - **El meu perfil** (icona de persona): dades personals, apartats actius i objectius.
 - **Configuració** (engranatge): tema, color, icones, recordatoris, compte, privacitat, versió.
 - **Mòduls:** cada usuari tria què fa servir (Nutrició, Aigua, Pes i mesures, Activitat, Tensió). El que es desactiva desapareix de tota l'app (menú, inici, observacions, calendari, botó «+», recordatoris).
+- **Cicle menstrual:** mòdul desactivat per defecte. A la benvinguda es pregunta només si la persona tria *Dona* o *No binari / prefereixo no dir-ho*; qualsevol persona el pot activar més endavant a El meu perfil.
 - **Només s'obre una finestra (full) alhora.** Si se n'obre una des d'una altra, l'anterior es tanca. Cada ✕ tanca la seva.
 
 ## 4. Dades i nutrició
@@ -41,6 +44,7 @@ Aquest document recull les decisions de disseny, dades i funcionament de l'app. 
 - L'app és **només per invitació**.
 - **Cap clau privada al repositori de GitHub.** Les claus (Gemini, VAPID, CRON, SMTP) van als secrets de Supabase.
 - **La còpia local del dispositiu queda lligada a cada usuari.** Si entra una altra persona, s'esborra. Mai es copien dades d'un compte a un altre.
+- **Dades del cicle xifrades d'extrem a extrem** (AES-GCM amb una clau derivada d'un PIN de mínim 6 caràcters). Ni l'administrador ni Supabase les poden llegir; si s'oblida el PIN, no es poden recuperar. No s'envien mai a la IA, i només s'exporten si la persona ho tria. Els recordatoris relacionats són discrets i la data de la regla prevista només va al calendari del mòbil.
 - **A la IA només s'envia** la descripció del menjar o la foto de l'etiqueta; mai dades personals.
 - Cada usuari pot **exportar** les seves dades i **esborrar el seu compte** amb totes les dades.
 

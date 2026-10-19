@@ -670,11 +670,26 @@ body.typing .bnav,body.typing .fab{transform:translateY(160%);opacity:0;pointer-
 .pushhelp{margin-top:8px;background:var(--surface2);border-radius:14px;padding:10px 12px}
 .pushhelp summary{font-weight:700;cursor:pointer}
 .pushhelp ol{margin:8px 0 0;padding-left:20px}.pushhelp li{margin:5px 0;line-height:1.4}
+
+/* Cicle */
+.cyhero{display:block!important;grid-template-columns:none!important}
+.cyh{padding:6px 8px}.cyd{font-stretch:120%;font-size:1.9rem;font-weight:850}.cyp{font-weight:800;font-size:1.05rem;margin-top:2px}.cyn{margin-top:6px;color:var(--muted)}
+.cytip{margin:10px 0 0;padding:10px 12px;border-radius:14px;background:var(--surface2);font-size:.9rem;line-height:1.4}
+.cychips{display:flex;flex-wrap:wrap;gap:6px}.cychips .chip{min-height:40px}.cychips .chip.on{background:var(--coral);color:var(--onaccent);border-color:var(--coral)}
+.cal .cd.cyc.per{background:color-mix(in srgb,var(--berry) 80%,transparent);color:#fff}.cal .cd.cyc.per .n{color:#fff}
+.cal .cd.cyc.pred{outline:2px dashed var(--berry);outline-offset:-3px}
+.cal .cd.cyc.fert{background:color-mix(in srgb,var(--m-g) 30%,var(--surface2))}
+.cal .cd.cyc.sel{box-shadow:inset 0 0 0 3px var(--ink)}
+.cal .cd.cyc .dot{position:absolute;bottom:5px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--ink)}
+.cyinfo{font-size:.9rem;line-height:1.45}
+.cyask{align-items:flex-start;margin:4px 0 10px;padding:10px;border-radius:14px;background:var(--surface2)}
+
+.bnav.n6 button{font-size:.56rem;letter-spacing:-.02em}.bnav.n6 .ni{width:34px}
 </style>
 <script>
 /* ===== VERSIÓ DE L'APP — canvia-la a cada actualització ===== */
-window.APP_VER='2.10.2';window.APP_TITLE='Privacitat i notificacions';window.APP_DATE='2026-10-19';
-window.APP_NEWS=["Privacitat reforçada: cada usuari només veu les seves dades encara que comparteixin dispositiu, i els usuaris nous comencen amb el perfil buit","La importació de còpies JSON només la pot fer l'administrador","Ajuda nova a Configuració → Recordatoris: com activar les notificacions a Chrome","Cada actualització mostra el seu nom i les novetats en entrar per primer cop","IA als tuppers i a les receptes: descriu els ingredients i la IA els afegeix amb els valors calculats","Corregit: «Desfés» després d'esborrar un aliment des de l'edició"];
+window.APP_VER='2.12.0';window.APP_TITLE='Cicle menstrual';window.APP_DATE='2026-10-19';
+window.APP_NEWS=["Corregit: en tornar a entrar, l'app ja no et demana el perfil com si fossis un usuari nou","Nou mòdul Cicle menstrual: regla, símptomes, estat d'ànim, previsions, estadístiques i informe per a la consulta","Les dades del cicle es xifren al teu mòbil amb un PIN: ningú més les pot llegir","El cicle es connecta amb la resta: consells d'activitat i observacions segons la fase","S'activa a El meu perfil → Què vols fer servir? (a la benvinguda es pregunta a dones i persones no binàries)","Perspectiva de gènere: tria a El meu perfil com vols que l'app et parli (en masculí, en femení o en neutre)","Nova opció de sexe: no binari / prefereixo no dir-ho (els càlculs fan servir una mitjana)","Els textos per a persones noves són neutres fins que creen el perfil","Privacitat reforçada: cada usuari només veu les seves dades encara que comparteixin dispositiu, i els usuaris nous comencen amb el perfil buit","La importació de còpies JSON només la pot fer l'administrador","Ajuda nova a Configuració → Recordatoris: com activar les notificacions a Chrome","Cada actualització mostra el seu nom i les novetats en entrar per primer cop","IA als tuppers i a les receptes: descriu els ingredients i la IA els afegeix amb els valors calculats","Corregit: «Desfés» després d'esborrar un aliment des de l'edició"];
 </script>
 <script>
 /* Adaptador per a la versió publicada (GitHub Pages + Supabase).
@@ -685,7 +700,7 @@ window.APP_NEWS=["Privacitat reforçada: cada usuari només veu les seves dades 
   if(!cfg.SUPABASE_URL||!cfg.SUPABASE_ANON_KEY||!window.supabase){document.addEventListener('DOMContentLoaded',()=>{const a=$('auth');a.hidden=false;$('authSub').textContent='Falta configurar Supabase al fitxer config.js (mira la GUIA).';['au_go','au_mode','au_forgot'].forEach(i=>$(i).disabled=true)});window.claude={use:async()=>null};return}
   const sb=window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});window.SB=sb;
   let uRes;const userReady=new Promise(r=>uRes=r);let signup=false;
-  const PERUSER=['salut-cache','salut-onb','salut-rem','salut-priv','salut-expRem'];
+  const PERUSER=['salut-cache','salut-onb','salut-rem','salut-priv','salut-expRem','salut-cyk'];
   function claim(u){try{const own=localStorage.getItem('salut-cache-uid');
     if(own!==u.id){const had=PERUSER.some(k=>localStorage.getItem(k)!=null);PERUSER.forEach(k=>localStorage.removeItem(k));localStorage.setItem('salut-cache-uid',u.id);if(had){location.reload();return false}}}catch(e){}return true}
   function okUser(u){if(claim(u)){uRes(u);hideAuth()}}
@@ -697,7 +712,7 @@ window.APP_NEWS=["Privacitat reforçada: cada usuari només veu les seves dades 
   const linkType=(/type=(invite|recovery|signup)/.exec(location.hash)||[])[1]||null;
   let mode=linkType==='invite'?'invite':linkType==='recovery'?'recovery':'login';
   function setPassMode(m){mode=m;ready(()=>{$('auth').hidden=false;document.body.classList.add('noscroll');$('au_mail').closest('label').hidden=true;$('au_forgot').hidden=true;$('au_inv').hidden=true;
-    $('authSub').textContent=m==='invite'?'Benvingut/da! Crea la teva contrasenya per entrar.':'Escriu la teva contrasenya nova.';$('au_go').textContent='Desa la contrasenya';$('au_pass').autocomplete='new-password';$('au_privL').hidden=m!=='invite'})}
+    $('authSub').textContent=m==='invite'?'Et donem la benvinguda! Crea la teva contrasenya per entrar.':'Escriu la teva contrasenya nova.';$('au_go').textContent='Desa la contrasenya';$('au_pass').autocomplete='new-password';$('au_privL').hidden=m!=='invite'})}
   if(mode!=='login')setPassMode(mode);
   sb.auth.onAuthStateChange((ev,session)=>{if(ev==='PASSWORD_RECOVERY'){setPassMode('recovery');return}
     if(ev==='SIGNED_IN'&&session){if(mode!=='login')return;okUser(session.user)}
@@ -753,6 +768,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   <p><b>On:</b> a una base de dades de Supabase amb servidors a la Unió Europea (Irlanda), protegida amb contrasenya i xifratge. Cada usuari només pot veure les seves pròpies dades; ni tan sols la persona que gestiona l'app les pot consultar des de l'app.</p>
   <p><b>Despensa compartida:</b> els aliments que afegeixes a «Els meus aliments» (nom, marca i valors nutricionals per 100 g) es comparteixen amb els altres usuaris per fer créixer la base. <u>No</u> es comparteix què menges, ni quan, ni cap altra dada teva.</p>
   <p><b>Intel·ligència artificial:</b> quan fas servir «Calcula amb IA» o la lectura d'etiquetes amb IA, només s'envia a Google (Gemini) la descripció del menjar o la foto de l'etiqueta. Mai el teu nom, el teu pes, la tensió ni cap altra dada personal.</p>
+  <p><b>Cicle menstrual:</b> si actives aquest mòdul, les dades del cicle es xifren al teu dispositiu amb un PIN que només saps tu abans d'enviar-se. Ningú més les pot llegir, ni l'administrador de l'app ni Supabase. Si oblides el PIN, no es poden recuperar. Mai s'envien a la IA.</p>
   <p><b>Serveis externs:</b> quan cerques un producte, el text de la cerca o el codi de barres s'envia a Open Food Facts (base de dades pública). Cap dada personal ni de salut s'hi envia.</p>
   <p><b>Els teus drets:</b> pots exportar totes les teves dades (Exporta a Excel) i esborrar el teu compte i totes les dades en qualsevol moment des de Configuració. L'esborrat és definitiu.</p>
   <p><b>Base legal:</b> el teu consentiment explícit, que pots retirar esborrant el compte.</p>
@@ -834,6 +850,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   </section>
 
   <section id="entrenos">
+    <div class="panel cyinfo" id="cyAct" hidden></div>
     <h2>Activitat</h2>
     <p class="sub" id="entSub"></p>
     <div class="panel">
@@ -853,9 +870,42 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     <div class="panel"><h3>Historial</h3><ul class="list" id="entList"></ul></div>
   </section>
 
+  <section id="cicle">
+    <h2>Cicle menstrual</h2>
+    <p class="sub">Les teves dades del cicle estan xifrades: només les pots llegir tu.</p>
+    <div id="cyLock" class="panel"></div>
+    <div id="cyMain" hidden>
+      <div class="hero cyhero" id="cyHero"></div>
+      <div class="panel">
+        <div class="daynav"><button id="cyPrev" aria-label="Dia anterior">‹</button><input type="date" id="cyDate" aria-label="Dia"><button id="cyNext" aria-label="Dia següent">›</button></div>
+        <div class="cfgl" style="margin-top:12px">Sagnat</div><div class="cychips" id="cySag"></div>
+        <div class="cfgl" style="margin-top:12px">Símptomes</div><div class="cychips" id="cySym"></div>
+        <div class="cfgl" style="margin-top:12px">Estat d'ànim</div><div class="cychips" id="cyMood"></div>
+        <div class="cfgl" style="margin-top:12px">Energia</div><div class="cychips" id="cyEn"></div>
+        <div class="cfgl" style="margin-top:12px">Flux vaginal</div><div class="cychips" id="cyFlux"></div>
+        <label style="margin-top:12px">Notes<textarea id="cyNota" rows="2" placeholder="Opcional"></textarea></label>
+        <p class="note" id="cySaved" style="margin:6px 0 0"></p>
+      </div>
+      <div class="panel"><h3>Calendari</h3><div id="cyCal"></div></div>
+      <div class="panel"><h3>Estadístiques</h3><div id="cyStats"></div></div>
+      <div class="panel"><h3>Opcions</h3>
+        <label class="chk"><input type="checkbox" id="cyOptFert"> Mostrar la finestra fèrtil estimada</label>
+        <p class="note" style="margin:2px 0 8px 30px">Orientativa. <b>No és un mètode anticonceptiu.</b></p>
+        <label class="chk"><input type="checkbox" id="cyOptHorm"> Faig servir anticonceptius hormonals</label>
+        <label class="chk"><input type="checkbox" id="cyOptPeri"> Estic a la perimenopausa</label>
+        <label class="chk"><input type="checkbox" id="cyOptExp"> Incloure el cicle a l'exportació a Excel</label>
+        <div class="btnrow" style="margin-top:12px;display:grid;gap:8px">
+          <button class="btn ghost" id="cyIcs" type="button">Afegeix la propera regla al calendari</button>
+          <button class="btn ghost" id="cyRep" type="button">Informe per a la consulta</button>
+          <button class="btn ghost" id="cyLockBtn" type="button">Bloqueja ara</button>
+          <button class="linkb" id="cyPinChg" type="button">Canvia el PIN</button>
+        </div>
+      </div>
+    </div>
+  </section>
   <section id="tensio">
     <h2>Tensió i pols</h2>
-    <p class="sub">Assegut, 5 minuts de repòs, sempre al mateix braç.</p>
+    <p class="sub">En repòs 5 minuts, amb l'esquena recolzada i sempre al mateix braç.</p>
     <button class="addcta" data-fs="sh_ten" style="--acc:var(--c-ten)"><span>＋</span>Nova presa de tensió</button>
     <div class="panel"><h3>Mitjana dels últims 7 dies</h3><div id="tensMitja"></div></div>
     <div class="panel" id="infPanel">
@@ -1006,7 +1056,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     <button data-s="resum"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z" opacity="0.2"/><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></svg></span>Inici</button>
     <button data-s="pes"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg></span>Pes</button>
     <button data-s="entrenos"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,56a24,24,0,1,1-24-24A24,24,0,0,1,176,56Z" opacity="0.2"/><path d="M152,88a32,32,0,1,0-32-32A32,32,0,0,0,152,88Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,40Zm67.31,100.68c-.61.28-7.49,3.28-19.67,3.28-13.85,0-34.55-3.88-60.69-20a169.31,169.31,0,0,1-15.41,32.34,104.29,104.29,0,0,1,31.31,15.81C173.92,186.65,184,207.35,184,232a8,8,0,0,1-16,0c0-41.7-34.69-56.71-54.14-61.85-.55.7-1.12,1.41-1.69,2.1-19.64,23.8-44.25,36.18-71.63,36.18A92.29,92.29,0,0,1,31.2,208,8,8,0,0,1,32.8,192c25.92,2.59,48.47-7.49,67-30,12.49-15.14,21-33.61,25.25-47C86.13,92.34,61.27,111.63,61,111.84A8,8,0,1,1,51,99.36c1.5-1.2,37.22-29,89.51,6.57,45.47,30.91,71.93,20.31,72.18,20.19a8,8,0,1,1,6.63,14.56Z"/></svg></span>Activitat</button>
-    <button data-s="tensio"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M232,102c0,66-104,122-104,122S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A54,54,0,0,1,232,102Z" opacity="0.2"/><path d="M72,144H32a8,8,0,0,1,0-16H67.72l13.62-20.44a8,8,0,0,1,13.32,0l25.34,38,9.34-14A8,8,0,0,1,136,128h24a8,8,0,0,1,0,16H140.28l-13.62,20.44a8,8,0,0,1-13.32,0L88,126.42l-9.34,14A8,8,0,0,1,72,144ZM178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,.75,0,1.5,0,2.25a8,8,0,1,0,16-.5c0-.58,0-1.17,0-1.75A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46c0,53.61-77.76,102.15-96,112.8-10.83-6.31-42.63-26-66.68-52.21a8,8,0,1,0-11.8,10.82c31.17,34,72.93,56.68,74.69,57.63a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40Z"/></svg></span>Tensió</button>
+    <button data-s="cicle" hidden><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,120c0,32-48,56-48,56s-48-24-48-56a24,24,0,0,1,48,0,24,24,0,0,1,48,0Z" opacity="0.2"/><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V208ZM152,88a31.91,31.91,0,0,0-24,10.86A32,32,0,0,0,72,120c0,36.52,50.28,62.08,52.42,63.16a8,8,0,0,0,7.16,0C133.72,182.08,184,156.52,184,120A32,32,0,0,0,152,88Zm-24,78.93c-13.79-7.79-40-26.75-40-46.93a16,16,0,0,1,32,0,8,8,0,0,0,16,0,16,16,0,0,1,32,0C168,140.19,141.79,159.15,128,166.93Z"/></svg></span>Cicle</button><button data-s="tensio"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M232,102c0,66-104,122-104,122S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A54,54,0,0,1,232,102Z" opacity="0.2"/><path d="M72,144H32a8,8,0,0,1,0-16H67.72l13.62-20.44a8,8,0,0,1,13.32,0l25.34,38,9.34-14A8,8,0,0,1,136,128h24a8,8,0,0,1,0,16H140.28l-13.62,20.44a8,8,0,0,1-13.32,0L88,126.42l-9.34,14A8,8,0,0,1,72,144ZM178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,.75,0,1.5,0,2.25a8,8,0,1,0,16-.5c0-.58,0-1.17,0-1.75A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46c0,53.61-77.76,102.15-96,112.8-10.83-6.31-42.63-26-66.68-52.21a8,8,0,1,0-11.8,10.82c31.17,34,72.93,56.68,74.69,57.63a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40Z"/></svg></span>Tensió</button>
     <button data-s="nutri"><span class="ni"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M224,112a96,96,0,0,1-56,87.3V208a8,8,0,0,1-8,8H96a8,8,0,0,1-8-8v-8.7A96,96,0,0,1,32,112Z" opacity="0.2"/><path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23Zm15.91,18.2A71.45,71.45,0,0,1,199.54,104H148.12A71.84,71.84,0,0,1,189.39,74.43ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Zm36.66,152A8,8,0,0,0,160,199.3V208H96v-8.7A8,8,0,0,0,91.34,192a88.29,88.29,0,0,1-51-72H215.63A88.29,88.29,0,0,1,164.66,192Z"/></svg></span>Nutrició</button>
   </nav>
 <button class="fab" id="fab" aria-label="Afegeix ràpid" aria-haspopup="dialog"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M216,56V200a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40H200A16,16,0,0,1,216,56Z" opacity="0.2"/><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg></button>
@@ -1017,7 +1067,8 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   <div class="fields">
     <label class="wide">Nom<input id="pf_nom" placeholder="Com vols que et diguem" autocomplete="given-name"></label>
     <label>Data de naixement<input type="date" id="pf_naix"></label>
-    <label>Sexe<select id="pf_sexe"><option value="">—</option><option value="h">Home</option><option value="d">Dona</option></select></label>
+    <label>Sexe (per als càlculs)<select id="pf_sexe"><option value="">—</option><option value="h">Home</option><option value="d">Dona</option><option value="x">No binari / prefereixo no dir-ho</option></select></label>
+    <label class="wide">Com vols que et parlem?<select id="pf_tr"><option value="">Automàtic segons el sexe</option><option value="m">En masculí (benvingut)</option><option value="f">En femení (benvinguda)</option><option value="n">En neutre</option></select></label>
     <label>Alçada (cm)<input type="number" inputmode="numeric" id="pf_alc"></label>
     <label>Pes objectiu (kg)<input type="number" step="0.1" inputmode="decimal" id="pf_pobj"></label>
     <label>Objectiu<select id="pf_goal"><option value="perdre">Perdre greix</option><option value="mantenir">Mantenir-me</option><option value="guanyar">Guanyar múscul</option></select></label>
@@ -1068,17 +1119,19 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
   <button class="linkb" data-fsclose type="button" style="width:100%">Ara no, ho ajustaré jo</button>
 </div></div></div>
 <div class="fsh" id="sh_onb" hidden role="dialog" aria-modal="true" aria-label="Benvinguda"><div class="fsh-in"><div class="grab" aria-hidden="true"></div>
-<div class="panel"><h3>Benvingut/da a Salut i seny</h3>
+<div class="panel"><h3>Et donem la benvinguda a Salut i seny</h3>
   <p class="note" style="margin-top:0">Explica'ns una mica de tu perquè l'app calculi bé els teus objectius. Ho pots canviar quan vulguis a Pes → Registre.</p>
   <div class="fields">
     <label>Data de naixement<input type="date" id="ob_naix"></label>
-    <label>Sexe<select id="ob_sexe"><option value="">—</option><option value="h">Home</option><option value="d">Dona</option></select></label>
+    <label>Sexe (per als càlculs)<select id="ob_sexe" onchange="document.getElementById('ob_cyL').hidden=!(this.value==='d'||this.value==='x')"><option value="">—</option><option value="h">Home</option><option value="d">Dona</option><option value="x">No binari / prefereixo no dir-ho</option></select></label>
+    <label class="wide">Com vols que et parlem?<select id="ob_tr"><option value="">Automàtic segons el sexe</option><option value="m">En masculí (benvingut)</option><option value="f">En femení (benvinguda)</option><option value="n">En neutre</option></select></label>
     <label>Alçada (cm)<input type="number" inputmode="numeric" id="ob_alc"></label>
     <label>Pes actual (kg)<input type="number" step="0.1" inputmode="decimal" id="ob_pes"></label>
     <label class="wide">Pes objectiu (kg, opcional)<input type="number" step="0.1" inputmode="decimal" id="ob_obj"></label>
     <label>Què vols aconseguir?<select id="ob_g"><option value="perdre">Perdre greix</option><option value="mantenir" selected>Mantenir-me</option><option value="guanyar">Guanyar múscul</option></select></label>
     <label>Activitat habitual<select id="ob_a"><option value="1.2">Sedentària (feina asseguda, poc exercici)</option><option value="1.375" selected>Lleugera (1-3 dies d'exercici)</option><option value="1.55">Moderada (3-5 dies)</option><option value="1.725">Alta (6-7 dies o feina física)</option></select></label>
   </div>
+  <label class="chk cyask" id="ob_cyL" hidden><input type="checkbox" id="ob_cy"> <span><b>Vols activar el seguiment del cicle menstrual?</b><br><small class="note" style="margin:0">Regla, símptomes i previsions. Les dades es xifren amb un PIN que només saps tu. Ho pots canviar quan vulguis a El meu perfil.</small></span></label>
   <div class="cfgl" style="margin-top:6px">Què vols fer servir?</div>
   <div class="obmods"><label class="chk"><input type="checkbox" data-obm="nutri" checked> Nutrició</label><label class="chk"><input type="checkbox" data-obm="aigua" checked> Aigua</label><label class="chk"><input type="checkbox" data-obm="pes" checked> Pes i mesures</label><label class="chk"><input type="checkbox" data-obm="act" checked> Activitat</label><label class="chk"><input type="checkbox" data-obm="ten" checked> Tensió arterial</label></div>
   <p class="note">Consell: afegeix l'app a la pantalla d'inici des del menú de Chrome (⋮ → Afegeix a la pantalla d'inici) per tenir-la com una app més.</p>
@@ -1268,6 +1321,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
     <button data-q="menjar" style="--dom:var(--c-nut)"><span class="qi"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M208,40V168H152S152,64,208,40Z" opacity="0.2"/><path d="M72,88V40a8,8,0,0,1,16,0V88a8,8,0,0,1-16,0ZM216,40V224a8,8,0,0,1-16,0V176H152a8,8,0,0,1-8-8,268.75,268.75,0,0,1,7.22-56.88c9.78-40.49,28.32-67.63,53.63-78.47A8,8,0,0,1,216,40ZM200,53.9c-32.17,24.57-38.47,84.42-39.7,106.1H200ZM119.89,38.69a8,8,0,1,0-15.78,2.63L112,88.63a32,32,0,0,1-64,0l7.88-47.31a8,8,0,1,0-15.78-2.63l-8,48A8.17,8.17,0,0,0,32,88a48.07,48.07,0,0,0,40,47.32V224a8,8,0,0,0,16,0V135.32A48.07,48.07,0,0,0,128,88a8.17,8.17,0,0,0-.11-1.31Z"/></svg></span>Menjar</button>
     <button data-q="aigua" style="--dom:var(--sky)"><span class="qi"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M208,144a80,80,0,0,1-160,0c0-72,80-128,80-128S208,72,208,144Z" opacity="0.2"/><path d="M174,47.75a254.19,254.19,0,0,0-41.45-38.3,8,8,0,0,0-9.18,0A254.19,254.19,0,0,0,82,47.75C54.51,79.32,40,112.6,40,144a88,88,0,0,0,176,0C216,112.6,201.49,79.32,174,47.75ZM128,216a72.08,72.08,0,0,1-72-72c0-57.23,55.47-105,72-118,16.53,13,72,60.75,72,118A72.08,72.08,0,0,1,128,216Zm55.89-62.66a57.6,57.6,0,0,1-46.56,46.55A8.75,8.75,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z"/></svg></span>Got d'aigua</button>
     <button data-q="pes" style="--dom:var(--c-pes)"><span class="qi"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg></span>Pes</button>
+    <button data-q="cicle" style="--dom:var(--berry)"><span class="qi"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M176,120c0,32-48,56-48,56s-48-24-48-56a24,24,0,0,1,48,0,24,24,0,0,1,48,0Z" opacity="0.2"/><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V208ZM152,88a31.91,31.91,0,0,0-24,10.86A32,32,0,0,0,72,120c0,36.52,50.28,62.08,52.42,63.16a8,8,0,0,0,7.16,0C133.72,182.08,184,156.52,184,120A32,32,0,0,0,152,88Zm-24,78.93c-13.79-7.79-40-26.75-40-46.93a16,16,0,0,1,32,0,8,8,0,0,0,16,0,16,16,0,0,1,32,0C168,140.19,141.79,159.15,128,166.93Z"/></svg></span>Cicle</button>
     <button data-q="tensio" style="--dom:var(--c-ten)"><span class="qi"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M232,102c0,66-104,122-104,122S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A54,54,0,0,1,232,102Z" opacity="0.2"/><path d="M72,144H32a8,8,0,0,1,0-16H67.72l13.62-20.44a8,8,0,0,1,13.32,0l25.34,38,9.34-14A8,8,0,0,1,136,128h24a8,8,0,0,1,0,16H140.28l-13.62,20.44a8,8,0,0,1-13.32,0L88,126.42l-9.34,14A8,8,0,0,1,72,144ZM178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,.75,0,1.5,0,2.25a8,8,0,1,0,16-.5c0-.58,0-1.17,0-1.75A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46c0,53.61-77.76,102.15-96,112.8-10.83-6.31-42.63-26-66.68-52.21a8,8,0,1,0-11.8,10.82c31.17,34,72.93,56.68,74.69,57.63a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40Z"/></svg></span>Tensió</button>
     <button data-q="entreno" style="--dom:var(--c-act)"><span class="qi"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M96,64V192a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H88A8,8,0,0,1,96,64Zm96-8H168a8,8,0,0,0-8,8V192a8,8,0,0,0,8,8h24a8,8,0,0,0,8-8V64A8,8,0,0,0,192,56Z" opacity="0.2"/><path d="M248,120h-8V88a16,16,0,0,0-16-16H208V64a16,16,0,0,0-16-16H168a16,16,0,0,0-16,16v56H104V64A16,16,0,0,0,88,48H64A16,16,0,0,0,48,64v8H32A16,16,0,0,0,16,88v32H8a8,8,0,0,0,0,16h8v32a16,16,0,0,0,16,16H48v8a16,16,0,0,0,16,16H88a16,16,0,0,0,16-16V136h48v56a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16v-8h16a16,16,0,0,0,16-16V136h8a8,8,0,0,0,0-16ZM32,168V88H48v80Zm56,24H64V64H88V192Zm104,0H168V64h24V175.83c0,.06,0,.11,0,.17s0,.12,0,.17V192Zm32-24H208V88h16Z"/></svg></span>Entrenament</button>
     <button data-q="passos" style="--dom:var(--c-act)"><span class="qi"><svg class="ic ph" viewBox="0 0 256 256" aria-hidden="true"><path d="M152,192h56v12a28,28,0,0,1-56,0ZM48,180a28,28,0,0,0,56,0V168H48ZM76,24c-24.52,0-51.46,80-25.26,112h50.52C127.46,104,100.52,24,76,24ZM205.26,160c26.2-32-.74-112-25.26-112s-51.46,80-25.26,112Z" opacity="0.2"/><path d="M208.06,184H152a8,8,0,0,0-8,8v12a36,36,0,0,0,72.05,0V192A8,8,0,0,0,208.06,184Zm-8,20a20,20,0,0,1-40,0v-4h40ZM104,160h-56a8,8,0,0,0-8,8v12A36,36,0,0,0,112,180V168A8,8,0,0,0,104,160Zm-8,20a20,20,0,0,1-40,0v-4H96ZM76,16C64.36,16,53.07,26.31,44.2,45c-13.93,29.38-18.56,73,.29,96a8,8,0,0,0,6.2,2.93h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C98.85,26.31,87.57,16,76,16ZM97.15,128H54.78c-11.4-18.1-7.21-52.7,3.89-76.11C65.14,38.22,72.17,32,76,32s10.82,6.22,17.3,19.89C104.36,75.3,108.55,109.9,97.15,128Zm57.61,40h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C202.93,50.31,191.64,40,180,40s-22.89,10.31-31.77,29c-13.93,29.38-18.56,73,.29,96A8,8,0,0,0,154.76,168Zm8-92.11C169.22,62.22,176.25,56,180,56s10.81,6.22,17.29,19.89c11.1,23.41,15.29,58,3.89,76.11H158.85C147.45,133.9,151.64,99.3,162.74,75.89Z"/></svg></span>Passos</button>
@@ -1321,7 +1375,7 @@ document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{const t=b.datas
 document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{const a=b.dataset.acc;lsSet('salut-accent',a);applyAccent(a);S.config.accent=a;save('config');hap();ecgPulse()});
 
 /* ---------- estat i desament ---------- */
-const DEF={passos:{days:{},obj:10000},pes:{items:[],obj:null},entrenos:{items:[]},tensio:{items:[]},nutricio:{days:{},totals:{}},config:{kcal:2000,p:140,c:200,g:65,f:30,ritme:null,naix:null,sexe:''},aigua:{days:{},obj:2000,got:250},aliments:{items:{}},tuppers:{items:{}},dejuni:{protocol:16,actiu:null,hist:[]}};
+const DEF={passos:{days:{},obj:10000},pes:{items:[],obj:null},entrenos:{items:[]},tensio:{items:[]},nutricio:{days:{},totals:{}},config:{kcal:2000,p:140,c:200,g:65,f:30,ritme:null,naix:null,sexe:''},aigua:{days:{},obj:2000,got:250},aliments:{items:{}},tuppers:{items:{}},cicle:{salt:null,iv:null,ct:null},dejuni:{protocol:16,actiu:null,hist:[]}};
 const S=JSON.parse(JSON.stringify(DEF));
 const KEYS=Object.keys(DEF);
 let DB=null,UID=null;const chains={},pend={},lastW={},refT={},dirty=new Set();
@@ -1364,21 +1418,22 @@ function save(k){
   chains[k]=(chains[k]||Promise.resolve()).then(()=>ref.set(body)).then(()=>{setSync('Desat ✓');diag('saved',{k})}).catch(e=>{diag('saveErr',{k,c:e&&e.code,m:String(e&&e.message).slice(0,120)});dirty.add(k);setSync('Només en aquest dispositiu');if(e&&e.code==='quota_exceeded')toast('Espai ple: esborra registres antics')}).finally(()=>{pend[k]--;lastW[k]=Date.now();clearTimeout(refT[k]);refT[k]=setTimeout(()=>refreshDoc(k),8500)});
 }
 function prune(){ /* versió publicada: es guarda tot l'historial sense límit */ }
+let dbRes;const dbReady=new Promise(r=>dbRes=r);
 async function initDB(){
-  if(!window.claude||!window.claude.use){setSync('Només en aquest dispositiu');return}
+  if(!window.claude||!window.claude.use){setSync('Només en aquest dispositiu');dbRes({ok:false});return}
   try{
     const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
-    if(!db||!user){setSync('Només en aquest dispositiu');return}
+    if(!db||!user){setSync('Només en aquest dispositiu');dbRes({ok:false});return}
     const id=await user.id(); if(!id){setSync('Només en aquest dispositiu');return}
     DB=db;UID=id;diag('init',{ua:navigator.userAgent.slice(0,80),today:today()});
     const snaps=await Promise.all(KEYS.map(k=>db.collection('data/users/'+id).doc(k).get().catch(()=>null)));
-    let anyRemote=false;
+    let anyRemote=false;const fails=snaps.filter(x=>x===null).length;
     snaps.forEach((s,i)=>{if(s&&s.exists){anyRemote=true;const d=s.data();if(d&&d.v)S[KEYS[i]]=Object.assign(JSON.parse(JSON.stringify(DEF[KEYS[i]])),JSON.parse(JSON.stringify(d.v)))}});
     if(false){ // versió publicada: mai es pugen dades locals d'un altre usuari
       const hasLocal=(S.dejuni.hist||[]).length||Object.keys(S.aliments.items).length||Object.keys(S.aigua.days).length||Object.keys(S.passos.days).length||S.pes.items.length||S.entrenos.items.length||S.tensio.items.length||Object.keys(S.nutricio.days).length;
       if(hasLocal){for(const k of KEYS)save(k)}
     }
-    saveLocal();setSync('Sincronitzat');renderAll();
+    saveLocal();setSync('Sincronitzat');renderAll();dbRes({ok:fails===0,anyRemote});
     // Escolta els canvis fets des d'altres dispositius o des del xat
     KEYS.forEach(k=>{try{db.collection('data/users/'+id).doc(k).onSnapshot(snap=>{
       const dd=snap&&snap.exists?snap.data():null;
@@ -1524,10 +1579,10 @@ function renderMesChart(){
 $('mesSel').onchange=()=>{mesSel=$('mesSel').value;renderMesChart()};
 let pesOpen=null;
 function edat(){const n=S.config.naix;if(!n)return null;const b=new Date(n+'T12:00:00'),t=new Date();let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a}
-function bfRange(){const a=edat(),sx=S.config.sexe;if(a==null||!sx)return null; // Gallagher et al. 2000
+function bfRange(){const a=edat(),sx=S.config.sexe;if(a==null||(sx!=='h'&&sx!=='d'))return null; // Gallagher et al. 2000
   const T=sx==='h'?[[39,8,19],[59,11,21],[200,13,24]]:[[39,21,32],[59,23,33],[200,24,35]];const r=T.find(x=>a<=x[0]);return{min:r[1],max:r[2]}}
 function renderPerfil(){const C=S.config,a=edat();setV('pf_naix',C.naix||'');setV('pf_sexe',C.sexe||'');
-  $('pf_info').innerHTML=a!=null?`Tens <b>${a} anys</b>. L'edat s'utilitza per als rangs de greix corporal i per a l'estimació inicial de calories.${C.sexe?'':' Indica el sexe per poder-los calcular.'}`:'Posa la data de naixement.';
+  $('pf_info').innerHTML=a!=null?`Tens <b>${a} anys</b>. L'edat s'utilitza per als rangs de greix corporal i per a l'estimació inicial de calories.${!C.sexe?' Indica el sexe per poder-los calcular.':C.sexe==='x'?' Amb «no binari / prefereixo no dir-ho», les calories es calculen amb una mitjana i no es mostra el rang de greix.':''}`:'Posa la data de naixement.';
   const r=bfRange(),last=pesSorted().find(x=>x.greix!=null);
   $('bfRef').innerHTML=r?`<div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><span>Greix corporal</span><b>${last?fmtC(last.greix,1)+' %':'—'}</b><small>${last?`<span class="badge ${last.greix<r.min?'b-info':last.greix<=r.max?'b-ok':'b-mid'}">${last.greix<r.min?'per sota del rang':last.greix<=r.max?'dins del rang':'per sobre del rang'}</span>`:'sense dades'}</small></div><div class="kpi"><span>Rang saludable (${a} anys)</span><b>${r.min}–${r.max} %</b><small>${S.config.sexe==='h'?'home':'dona'}</small></div></div>`:''}
 $('pf_naix').onchange=()=>{S.config.naix=$('pf_naix').value||null;save('config');renderAll()};
@@ -1711,7 +1766,7 @@ function renderQuick(){
 }
 $('n_apat').addEventListener('change',renderQuick);
 function mifflin(){const a=edat(),sx=S.config.sexe,h=S.pes.alcada,w=pesActual();if(a==null||!sx||!h||!w)return null;
-  const bmr=10*w+6.25*h-5*a+(sx==='h'?5:-161);const ses=S.entrenos.items.filter(x=>x.data>=addDays(today(),-27)).length/4;
+  const bmr=10*w+6.25*h-5*a+(sx==='h'?5:sx==='d'?-161:-78);const ses=S.entrenos.items.filter(x=>x.data>=addDays(today(),-27)).length/4;
   const fa=ses<1?1.2:ses<3?1.375:ses<5?1.55:1.725;return{bmr:Math.round(bmr/10)*10,tdee:Math.round(bmr*fa/10)*10,fa,a,h,w}}
 function estTDEE(){
   const t=today(),W=28,ins=[];
@@ -1726,7 +1781,7 @@ function renderDeficit(){
   const e=estTDEE(),m=mifflin(),C=S.config;let base=null,src='';
   if(e.ok){base=e.tdee;src=`la teva <b>despesa real</b> calculada amb ${e.dies} dies de dades`}else if(m){base=m.tdee;src=`l'<b>estimació inicial</b> (Mifflin-St Jeor, ${m.a} anys)`}
   if(!base){$('defBox').innerHTML=`<p class="note" style="margin-top:0">Per calcular-ho necessito la teva despesa diària. Ara mateix falta${!S.config.sexe?' el <b>sexe</b> (Pes → Registre → El meu perfil)':''}${!S.pes.alcada?' l\'<b>alçada</b>':''}${!pesActual()?' un <b>pes</b> registrat':''}. També es calcularà sol quan tinguis 10 dies de menjar apuntat.</p>`;return}
-  const floor=S.config.sexe==='d'?1200:1500,w=pesActual();
+  const floor=S.config.sexe==='d'?1200:S.config.sexe==='h'?1500:1350,w=pesActual();
   const opts=[['Suau',0.10,'fàcil de mantenir, gairebé sense gana'],['Moderat',0.20,'el més recomanat per perdre greix i conservar múscul'],['Intens',0.25,'per a períodes curts; cal molta proteïna i força']];
   const card=([nom,pct,desc])=>{let k=Math.round(base*(1-pct)/10)*10;const lim=k<floor;if(lim)k=Math.round(floor/10)*10;const def=base-k,kgw=def*7/7700,pcw=w?kgw/w*100:null,on=C.kcal===k;
     return `<div class="dcard ${on?'on':''}"><div class="dtop"><b>${nom}</b><span class="badge ${pct===0.2?'b-ok':pct>0.2?'b-mid':'b-info'}">−${Math.round(pct*100)} %</span></div>
@@ -1778,6 +1833,7 @@ async function doExport(){
     add('Entrenaments',[...S.entrenos.items].sort((a,b)=>a.data.localeCompare(b.data)).map(x=>({Data:x.data,Tipologia:x.tipus,'Durada (min)':x.dur??'',Km:x.km??'',Kcal:x.kcal??'',Notes:x.notes||''})));
     add('Passos',Object.keys(S.passos.days).sort().map(d=>({Data:d,Passos:S.passos.days[d]})));
     add('Tensió',[...S.tensio.items].sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora)).map(x=>({Data:x.data,Hora:x.hora||'',Sistòlica:x.sis,Diastòlica:x.dia,Pols:x.pols??'',Preses:x.lectures?x.lectures.map(l=>l.sis+'/'+l.dia).join(' · '):'',Classificació:cls(x.sis,x.dia)[0],Notes:x.notes||''})));
+    if(modOn('cicle')&&CY.data&&CY.data.cfg.exp)add('Cicle',Object.keys(CY.data.days).sort().map(d=>{const v=CY.data.days[d];return{Data:d,Sagnat:v.s!=null?SAG[v.s]:'',Símptomes:(v.sym||[]).map(i=>SYM[i]).join(', '),'Estat d\'ànim':v.mood!=null?MOOD[v.mood]:'',Energia:v.en!=null?MOOD[v.en]:'',Flux:v.fx!=null?FLUX[v.fx]:'',Notes:v.nota||''}}));
     add('Els meus aliments',Object.values(S.aliments.items).map(x=>({Nom:x.n,'Kcal/100g':x.k,'Proteïna/100g':x.p??'','Hidrats/100g':x.c??'','Greixos/100g':x.g??'','Fibra/100g':x.fb??'','Ració (g)':x.racio??'',Font:x.font||''})));
     const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     await DL.save({filename:`salut-i-seny-${today()}.xlsx`,data:new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})});
@@ -1936,9 +1992,9 @@ $('pushTest').onclick=async()=>{try{const {data,error}=await window.SB.functions
 document.addEventListener('change',async e=>{if(!e.target.closest||!e.target.closest('#remList')||!pushOk())return;try{const sub=await (await navigator.serviceWorker.ready).pushManager.getSubscription();if(sub)await pushSave(sub)}catch(err){}});
 
 /* ---------- Recordatoris (calendari .ics) ---------- */
-const REMS=[{k:'pes',t:'Pesar-me',h:'07:30',r:'FREQ=DAILY'},{k:'ten',t:'Prendre la tensió',h:'08:00',r:'FREQ=DAILY'},{k:'aig',t:'Beure aigua',h:'11:00',r:'FREQ=DAILY'},{k:'apa',t:'Apuntar els àpats del dia',h:'21:30',r:'FREQ=DAILY'},{k:'tup',t:'Preparar els tuppers de la setmana',h:'11:00',r:'FREQ=WEEKLY;BYDAY=SU'}];
+const REMS=[{k:'anti',t:'Recordatori diari',h:'21:00',r:'FREQ=DAILY'},{k:'pes',t:'Pesar-me',h:'07:30',r:'FREQ=DAILY'},{k:'ten',t:'Prendre la tensió',h:'08:00',r:'FREQ=DAILY'},{k:'aig',t:'Beure aigua',h:'11:00',r:'FREQ=DAILY'},{k:'apa',t:'Apuntar els àpats del dia',h:'21:30',r:'FREQ=DAILY'},{k:'tup',t:'Preparar els tuppers de la setmana',h:'11:00',r:'FREQ=WEEKLY;BYDAY=SU'}];
 function remCfg(){try{return JSON.parse(lsGet('salut-rem')||'{}')}catch(e){return{}}}
-function renderRem(){const c=remCfg(),RM={pes:'pes',ten:'ten',aig:'aigua',apa:'nutri',tup:'nutri'};$('remList').innerHTML=REMS.filter(r=>modOn(RM[r.k])).map(r=>`<li><label class="chk" style="flex:1"><input type="checkbox" data-remk="${r.k}" ${c[r.k]&&c[r.k].on?'checked':''}> ${r.t}${r.r.includes('WEEKLY')?' <small>(diumenges)</small>':''}</label><input type="time" data-remh="${r.k}" value="${(c[r.k]&&c[r.k].h)||r.h}" aria-label="Hora: ${r.t}" style="width:110px"></li>`).join('');
+function renderRem(){const c=remCfg(),RM={pes:'pes',ten:'ten',aig:'aigua',apa:'nutri',tup:'nutri',anti:'cicle'};$('remList').innerHTML=REMS.filter(r=>modOn(RM[r.k])).map(r=>`<li><label class="chk" style="flex:1"><input type="checkbox" data-remk="${r.k}" ${c[r.k]&&c[r.k].on?'checked':''}> ${r.t}${r.r.includes('WEEKLY')?' <small>(diumenges)</small>':''}</label><input type="time" data-remh="${r.k}" value="${(c[r.k]&&c[r.k].h)||r.h}" aria-label="Hora: ${r.t}" style="width:110px"></li>`).join('');
   document.querySelectorAll('[data-remk],[data-remh]').forEach(el=>el.onchange=()=>{const c2=remCfg();REMS.forEach(r=>{c2[r.k]={on:$q(`[data-remk="${r.k}"]`).checked,h:$q(`[data-remh="${r.k}"]`).value||r.h}});lsSet('salut-rem',JSON.stringify(c2))});
   $('expRem').checked=lsGet('salut-expRem')!=='0';}
 const $q=sel=>document.querySelector(sel);
@@ -1959,7 +2015,7 @@ $('invGo').onclick=async()=>{const email=$('invMail').value.trim();if(!/^\S+@\S+
   $('invGo').disabled=true;try{await invCall({email,redirectTo:location.origin+location.pathname});$('invMail').value='';toast('Invitació enviada a '+email);invList()}
   catch(e){toast(/already|registered|exists/i.test(e.message)?'Aquest correu ja té compte':'No s\'ha pogut enviar: '+e.message)}finally{$('invGo').disabled=false}};
 $('privOpen').onclick=()=>{$('privBox').hidden=false};
-$('delAcc').onclick=async()=>{const t=prompt('Això esborrarà el teu compte i TOTES les teves dades de manera definitiva.\n\nSi n\'estàs segur/a, escriu ESBORRA:');if(t!=='ESBORRA')return;
+$('delAcc').onclick=async()=>{const t=prompt('Això esborrarà el teu compte i TOTES les teves dades de manera definitiva.\n\n'+(tr()==='n'?'Si vols continuar':'Si n\'estàs '+g('segur','segura'))+', escriu ESBORRA:');if(t!=='ESBORRA')return;
   try{const {data,error}=await window.SB.functions.invoke('delete-account',{body:{}});if(error||(data&&data.error))throw new Error((error&&error.message)||data.error);try{localStorage.clear()}catch(e){}alert('El teu compte i les teves dades s\'han esborrat.');await window.SB.auth.signOut()}
   catch(e){toast('No s\'ha pogut esborrar: '+e.message)}};
 
@@ -1978,23 +2034,125 @@ function renderConsells(){if(!$('consBox'))return;const C=S.config,ap=$('cs_ap')
 (()=>{$('cv_ing').innerHTML=Object.entries(CING).filter(([,v])=>v[5]!==1).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');['cs_ap','cv_ing','cv_g','cv_dir'].forEach(i=>$(i).addEventListener('input',renderConsells))})();
 
 /* ---------- Mòduls (cada usuari tria què fa servir) ---------- */
-const MODS=[{k:'nutri',t:'Nutrició',d:'Apuntar el que menges, tuppers, despensa i consells'},{k:'aigua',t:'Aigua',d:'Comptador d\'aigua diari'},{k:'pes',t:'Pes i mesures',d:'Pes, composició corporal i mesures'},{k:'act',t:'Activitat',d:'Passos i entrenaments'},{k:'ten',t:'Tensió arterial',d:'Preses de tensió i informe per al metge'}];
-const modOn=k=>!(S.config.mods&&S.config.mods[k]===false);
+const MODS=[{k:'cicle',t:'Cicle menstrual',d:'Regla, símptomes i previsions (dades xifrades amb el teu PIN)'},{k:'nutri',t:'Nutrició',d:'Apuntar el que menges, tuppers, despensa i consells'},{k:'aigua',t:'Aigua',d:'Comptador d\'aigua diari'},{k:'pes',t:'Pes i mesures',d:'Pes, composició corporal i mesures'},{k:'act',t:'Activitat',d:'Passos i entrenaments'},{k:'ten',t:'Tensió arterial',d:'Preses de tensió i informe per al metge'}];
+const modOn=k=>k==='cicle'?!!(S.config.mods&&S.config.mods.cicle===true):!(S.config.mods&&S.config.mods[k]===false);
 function renderModList(){$('modList').innerHTML=MODS.map(m=>`<li><label class="chk" style="flex:1"><input type="checkbox" data-mod="${m.k}" ${modOn(m.k)?'checked':''}><span><b>${m.t}</b><br><small class="note" style="margin:0">${m.d}</small></span></label></li>`).join('');
   document.querySelectorAll('[data-mod]').forEach(c=>c.onchange=()=>{const on=MODS.filter(m=>document.querySelector(`[data-mod="${m.k}"]`).checked);if(!on.length){c.checked=true;toast('Cal tenir almenys un apartat actiu');return}
     S.config.mods=Object.fromEntries(MODS.map(m=>[m.k,document.querySelector(`[data-mod="${m.k}"]`).checked]));save('config');applyMods();renderAll()})}
-function applyMods(){const M={pes:'pes',entrenos:'act',tensio:'ten',nutri:'nutri'};let n=0;
+function applyMods(){const M={pes:'pes',entrenos:'act',tensio:'ten',nutri:'nutri',cicle:'cicle'};let n=0;
   document.querySelectorAll('.bnav [data-s]').forEach(b=>{const k=M[b.dataset.s];const on=!k||modOn(k);b.hidden=!on;if(on)n++});
-  const bn=document.querySelector('.bnav');if(bn)bn.style.gridTemplateColumns=`repeat(${n},1fr)`;
+  const bn=document.querySelector('.bnav');if(bn){bn.style.gridTemplateColumns=`repeat(${n},1fr)`;bn.classList.toggle('n6',n>=6)}
   const cur=document.querySelector('main section.on');if(cur&&M[cur.id]&&!modOn(M[cur.id]))show('resum');
-  const Q={menjar:'nutri',aigua:'aigua',pes:'pes',tensio:'ten',entreno:'act',passos:'act'};document.querySelectorAll('[data-q]').forEach(b=>b.hidden=!modOn(Q[b.dataset.q]));
+  const Q={menjar:'nutri',aigua:'aigua',pes:'pes',tensio:'ten',entreno:'act',passos:'act',cicle:'cicle'};document.querySelectorAll('[data-q]').forEach(b=>b.hidden=!modOn(Q[b.dataset.q]));
   const ag=$('aiguaBox');if(ag){const pn=ag.closest('.panel');if(pn)pn.hidden=!modOn('aigua')}
   document.body.classList.toggle('no-nutri',!modOn('nutri'))}
 
+/* ---------- Cicle menstrual (xifrat d'extrem a extrem) ---------- */
+const CY={key:null,data:null,date:null};
+const u8b64=u=>{let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
+const b64u8=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+async function cyDerive(pin,salt){const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64u8(salt),iterations:210000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},true,['encrypt','decrypt'])}
+async function cyDecrypt(){const C=S.cicle;if(!C||!C.ct){CY.data=CY.data||{days:{},cfg:{}};return true}
+  try{const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64u8(C.iv)},CY.key,b64u8(C.ct));CY.data=JSON.parse(new TextDecoder().decode(pt));CY.data.days=CY.data.days||{};CY.data.cfg=CY.data.cfg||{};return true}catch(e){return false}}
+let cyT=null;function cySave(){clearTimeout(cyT);cyT=setTimeout(async()=>{if(!CY.key||!CY.data)return;const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},CY.key,new TextEncoder().encode(JSON.stringify(CY.data))));S.cicle.iv=u8b64(iv);S.cicle.ct=u8b64(ct);save('cicle');$('cySaved').textContent='✓ Desat i xifrat';hap();ecgPulse()},600)}
+async function cyRemember(){try{const j=await crypto.subtle.exportKey('jwk',CY.key);lsSet('salut-cyk',JSON.stringify(j))}catch(e){}}
+async function cyAutoUnlock(){if(CY.key||!S.cicle||!S.cicle.salt)return;const j=lsGet('salut-cyk');if(!j)return;try{CY.key=await crypto.subtle.importKey('jwk',JSON.parse(j),{name:'AES-GCM'},true,['encrypt','decrypt']);if(!(await cyDecrypt())){CY.key=null;localStorage.removeItem('salut-cyk')}else renderAll()}catch(e){CY.key=null}}
+// --- càlculs ---
+const SAG=['Cap','Tacat','Lleuger','Mitjà','Abundant'],SYM=['Dolor abdominal','Mal de cap','Inflor','Pit sensible','Acne','Cansament','Insomni','Més gana','Rampes','Mal d\'esquena','Nàusees','Irritabilitat'],MOOD=['Molt baix','Baix','Normal','Bo','Molt bo'],FLUX=['Cap','Sec','Cremós','Aquós','Com clara d\'ou'];
+function cyStarts(){const D=CY.data.days,ks=Object.keys(D).filter(k=>(D[k].s||0)>=2).sort(),st=[];let prev=null;ks.forEach(k=>{if(!prev||addDays(prev,1)<k&&daysBetween(prev,k)>2)st.push(k);prev=k});return st}
+function daysBetween(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5)}
+function cyPeriodLen(start){const D=CY.data.days;let n=0,d=start;while(D[d]&&(D[d].s||0)>=1&&n<15){n++;d=addDays(d,1)}return Math.max(1,n)}
+function cyModel(){const st=cyStarts(),lens=[];for(let i=1;i<st.length;i++){const L=daysBetween(st[i-1],st[i]);if(L>=15&&L<=60)lens.push(L)}
+  const last6=lens.slice(-6),C=last6.length?Math.round(last6.reduce((a,b)=>a+b,0)/last6.length):28,sd=last6.length>1?Math.sqrt(last6.reduce((a,b)=>a+(b-C)**2,0)/(last6.length-1)):null;
+  const pls=st.slice(-6).map(cyPeriodLen),P=pls.length?Math.round(pls.reduce((a,b)=>a+b,0)/pls.length):5,L=st[st.length-1]||null;
+  return{st,lens,C,sd,P,L,next:L?addDays(L,C):null,ov:C-14}}
+function cyPhase(day,m){if(!m.L||day<m.L)return null;const d=daysBetween(m.L,day)+1;if(d>m.C+20)return null;
+  const ph=d<=m.P?'menstrual':d<m.ov-1?'folicular':d<=m.ov+1?'ovulacio':'lutia';return{d,ph}}
+const PHN={menstrual:'Fase menstrual',folicular:'Fase fol·licular',ovulacio:'Ovulació (estimada)',lutia:'Fase lútia'};
+const PHC={menstrual:'var(--berry)',folicular:'var(--m-p)',ovulacio:'var(--m-g)',lutia:'var(--m-h)'};
+const PHTIP={menstrual:'Escolta el cos: si tens dolor, millor activitat suau (caminar, estiraments, ioga). Hidrata\'t bé.',
+  folicular:'L\'energia acostuma a pujar: bona fase per a entrenaments intensos i de força.',
+  ovulacio:'Molts cossos tenen un pic d\'energia. Si fas força, escalfa bé: pot haver-hi més laxitud articular.',
+  lutia:'És normal tenir més gana i retenir líquids: el pes pot pujar 0,5-1,5 kg de manera temporal. Prioritza la proteïna i el descans.'};
+function cyVital(){const m=cyModel(),f=cyPhase(today(),m);const nx=m.next?daysBetween(today(),m.next):null;
+  return{s:'cicle',dom:'--berry',k:'Cicle',v:f?`Dia ${f.d}<small>${PHN[f.ph].replace('Fase ','')}</small>`:'—',n:m.next?(nx>0?`Propera regla en ${nx} dies`:nx===0?'Regla prevista avui':`Regla endarrerida ${-nx} dies`):'Apunta la teva regla',sp:''}}
+// --- interfície ---
+function cyChips(id,list,cur,multi,key){$(id).innerHTML=list.map((t,i)=>{const on=multi?(cur||[]).includes(i):cur===i;return `<button type="button" class="chip${on?' on':''}" data-cy="${key}" data-i="${i}" aria-pressed="${on}">${t}</button>`}).join('')}
+function renderCicle(){const sec=$('cicle');if(!sec)return;const lock=$('cyLock'),main=$('cyMain');
+  if(!S.cicle||!S.cicle.salt){lock.hidden=false;main.hidden=true;lock.innerHTML=`<h3>Activa el seguiment del cicle</h3><p class="note" style="margin-top:0">Tria un <b>PIN</b> (mínim 6 caràcters). Les dades es xifraran al teu mòbil amb aquest PIN abans d'enviar-se: <b>ningú més les podrà llegir</b>, ni l'administrador de l'app. <b>Si l'oblides, no es poden recuperar.</b></p>
+    <div class="fields"><label>PIN<input type="password" id="cyPin1" autocomplete="new-password" inputmode="text"></label><label>Repeteix-lo<input type="password" id="cyPin2" autocomplete="new-password"></label></div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="cyRem" checked> Recorda'l en aquest dispositiu</label><button class="btn" id="cyGo" type="button" style="width:100%;margin-top:10px">Activa</button><p class="note" id="cyMsg"></p>`;
+    $('cyGo').onclick=async()=>{const a=$('cyPin1').value,b=$('cyPin2').value;if(a.length<6){$('cyMsg').textContent='El PIN ha de tenir almenys 6 caràcters.';return}if(a!==b){$('cyMsg').textContent='Els dos PIN no coincideixen.';return}
+      S.cicle={salt:u8b64(crypto.getRandomValues(new Uint8Array(16))),iv:null,ct:null};CY.key=await cyDerive(a,S.cicle.salt);CY.data={days:{},cfg:{}};if($('cyRem').checked)await cyRemember();cySave();toast('Seguiment del cicle activat');renderAll()};return}
+  if(!CY.key||!CY.data){lock.hidden=false;main.hidden=true;lock.innerHTML=`<h3>Desbloqueja el cicle</h3><p class="note" style="margin-top:0">Escriu el teu PIN per veure les dades del cicle.</p><label>PIN<input type="password" id="cyPinU" autocomplete="current-password"></label>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="cyRemU" checked> Recorda'l en aquest dispositiu</label><button class="btn" id="cyUn" type="button" style="width:100%;margin-top:10px">Desbloqueja</button><p class="note" id="cyMsg"></p>
+    <button class="linkb" id="cyForgot" type="button">He oblidat el PIN</button>`;
+    const go=async()=>{CY.key=await cyDerive($('cyPinU').value,S.cicle.salt);if(await cyDecrypt()){if($('cyRemU').checked)await cyRemember();renderAll()}else{CY.key=null;$('cyMsg').textContent='PIN incorrecte.'}};
+    $('cyUn').onclick=go;$('cyPinU').onkeydown=e=>{if(e.key==='Enter')go()};
+    $('cyForgot').onclick=()=>{if(prompt('Sense el PIN, les dades del cicle no es poden recuperar. Si vols esborrar-les i començar de nou, escriu ESBORRA:')!=='ESBORRA')return;S.cicle={salt:null,iv:null,ct:null};CY.key=null;CY.data=null;localStorage.removeItem('salut-cyk');save('cicle');renderAll()};return}
+  lock.hidden=true;main.hidden=false;const D=CY.data.days,cfg=CY.data.cfg,m=cyModel(),t=today();CY.date=CY.date||t;const day=D[CY.date]||{};
+  const f=cyPhase(t,m),nx=m.next?daysBetween(t,m.next):null;
+  $('cyHero').innerHTML=`<div class="cyh"><div class="cyd">${f?`Dia <b>${f.d}</b>`:'—'}</div><div class="cyp" style="color:${f?PHC[f.ph]:'inherit'}">${f?PHN[f.ph]:'Apunta el primer dia de la regla per començar'}</div>
+    <div class="cyn">${m.next?(nx>0?`Propera regla en <b>${nx} dies</b> · ${fmtD(m.next)}`:nx===0?'Regla prevista <b>avui</b>':`Regla endarrerida <b>${-nx} dies</b>`):''}${cfg.horm?'<br><small>Amb anticonceptius hormonals, el sagnat és de deprivació: les previsions són orientatives.</small>':''}${cfg.peri?'<br><small>A la perimenopausa els cicles poden ser irregulars: previsions orientatives.</small>':''}</div>
+    ${f?`<p class="cytip">${PHTIP[f.ph]}</p>`:''}</div>`;
+  $('cyDate').value=CY.date;$('cyNext').disabled=CY.date>=t;
+  cyChips('cySag',SAG,day.s??null,false,'s');cyChips('cySym',SYM,day.sym||[],true,'sym');cyChips('cyMood',MOOD,day.mood??null,false,'mood');cyChips('cyEn',MOOD,day.en??null,false,'en');cyChips('cyFlux',FLUX,day.fx??null,false,'fx');
+  if(document.activeElement!==$('cyNota'))$('cyNota').value=day.nota||'';
+  // calendari del mes
+  const [y,mo]=CY.date.split('-').map(Number),first=new Date(y,mo-1,1),nd=new Date(y,mo,0).getDate(),off=(first.getDay()+6)%7;
+  const pred=new Set(),fert=new Set();if(m.next){for(let i=0;i<m.P;i++)pred.add(addDays(m.next,i));if(cfg.fert&&m.L){const ov=addDays(m.next,-14);for(let i=-5;i<=1;i++)fert.add(addDays(ov,i));const ov0=addDays(m.L,m.ov-1);for(let i=-5;i<=1;i++)fert.add(addDays(ov0,i))}}
+  let cells=['Dl','Dt','Dc','Dj','Dv','Ds','Dg'].map(d=>`<div class="dh">${d}</div>`).join('')+'<div class="blank"></div>'.repeat(off);
+  for(let i=1;i<=nd;i++){const d=`${y}-${String(mo).padStart(2,'0')}-${String(i).padStart(2,'0')}`,v=D[d]||{},per=(v.s||0)>=1;
+    cells+=`<button class="cd cyc${per?' per':''}${!per&&pred.has(d)?' pred':''}${fert.has(d)?' fert':''}${d===t?' today':''}${d===CY.date?' sel':''}" data-cyday="${d}" ${d>t?'disabled':''} aria-label="${fmtDL(d)}${per?', regla':''}"><span class="n">${i}</span>${(v.sym||[]).length?'<i class="dot"></i>':''}</button>`}
+  $('cyCal').innerHTML=`<div class="calhead"><button id="cyMp" aria-label="Mes anterior">‹</button><b>${first.toLocaleDateString('ca-ES',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</b><button id="cyMn" aria-label="Mes següent">›</button></div><div class="cal">${cells}</div>
+    <div class="legend" style="margin-top:10px"><span><i style="background:var(--berry);border-radius:50%"></i>Regla</span><span><i style="border:2px dashed var(--berry);border-radius:50%;background:none"></i>Prevista</span>${cfg.fert?'<span><i style="background:color-mix(in srgb,var(--m-g) 35%,transparent);border-radius:50%"></i>Finestra fèrtil</span>':''}<span><i style="background:var(--ink);border-radius:50%;width:6px;height:6px"></i>Símptomes</span></div>`;
+  $('cyMp').onclick=()=>{const d=new Date(y,mo-2,1);CY.date=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;renderCicle()};
+  $('cyMn').onclick=()=>{const d=new Date(y,mo,1),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;if(k<=t){CY.date=k;renderCicle()}};
+  // estadístiques
+  const reg=m.sd==null?null:m.sd<=3?'Regular':m.sd<=7?'Bastant regular':'Irregular',warn=m.lens.length>=2&&(m.C<21||m.C>35||(m.sd!=null&&m.sd>7));
+  const ph={menstrual:{},folicular:{},ovulacio:{},lutia:{}};Object.entries(D).forEach(([d,v])=>{const f2=cyPhase(d,{...m,L:m.st.filter(x=>x<=d).pop()||null});if(!f2)return;(v.sym||[]).forEach(i=>{ph[f2.ph][i]=(ph[f2.ph][i]||0)+1})});
+  const top=k=>Object.entries(ph[k]).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([i])=>SYM[i]).join(', ')||'—';
+  $('cyStats').innerHTML=`<div class="kpis"><div class="kpi"><span>Durada del cicle</span><b>${m.lens.length?m.C+' dies':'—'}</b><small>${m.lens.length?'mitjana de '+Math.min(6,m.lens.length)+' cicles':'cal registrar 2 regles'}</small></div><div class="kpi"><span>Durada de la regla</span><b>${m.st.length?m.P+' dies':'—'}</b><small>mitjana</small></div><div class="kpi"><span>Regularitat</span><b>${reg||'—'}</b><small>${m.sd!=null?'±'+fmtC(m.sd,1)+' dies':'cal més dades'}</small></div></div>
+    ${warn?'<p class="note" style="color:var(--amber)"><b>Atenció:</b> els teus cicles són molt curts, molt llargs o irregulars. Pot ser normal, però és recomanable comentar-ho amb un professional de la salut.</p>':''}
+    <div class="cfgl" style="margin-top:12px">Símptomes més freqüents per fase</div><ul class="clist">${['menstrual','folicular','ovulacio','lutia'].map(k=>`<li><span style="color:${PHC[k]};font-weight:700">${PHN[k]}</span><span>${top(k)}</span></li>`).join('')}</ul>`;
+  $('cyOptFert').checked=!!cfg.fert;$('cyOptHorm').checked=!!cfg.horm;$('cyOptPeri').checked=!!cfg.peri;$('cyOptExp').checked=!!cfg.exp;
+}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-cy],[data-cyday]');if(!b||!CY.data)return;
+  if(b.dataset.cyday){CY.date=b.dataset.cyday;renderCicle();return}
+  const D=CY.data.days,d=CY.date,v=D[d]=D[d]||{},k=b.dataset.cy,i=+b.dataset.i;
+  if(k==='sym'){v.sym=v.sym||[];v.sym=v.sym.includes(i)?v.sym.filter(x=>x!==i):[...v.sym,i]}else v[k]=v[k]===i?null:i;
+  if(!v.s&&!(v.sym||[]).length&&v.mood==null&&v.en==null&&v.fx==null&&!v.nota)delete D[d];cySave();renderCicle();renderResum();renderCyAct()});
+$('cyNota').addEventListener('input',()=>{if(!CY.data)return;const d=CY.date,D=CY.data.days;(D[d]=D[d]||{}).nota=$('cyNota').value;cySave()});
+$('cyDate').onchange=()=>{const v=$('cyDate').value;if(v&&v<=today()){CY.date=v;renderCicle()}};
+$('cyPrev').onclick=()=>{CY.date=addDays(CY.date||today(),-1);renderCicle()};$('cyNext').onclick=()=>{if(CY.date<today()){CY.date=addDays(CY.date,1);renderCicle()}};
+[['cyOptFert','fert'],['cyOptHorm','horm'],['cyOptPeri','peri'],['cyOptExp','exp']].forEach(([id,k])=>$(id).onchange=()=>{if(!CY.data)return;CY.data.cfg[k]=$(id).checked;cySave();renderCicle()});
+$('cyLockBtn').onclick=()=>{CY.key=null;CY.data=null;localStorage.removeItem('salut-cyk');renderAll();toast('Cicle bloquejat')};
+$('cyPinChg').onclick=async()=>{const a=prompt('Nou PIN (mínim 6 caràcters):');if(!a)return;if(a.length<6){toast('Massa curt');return}if(prompt('Repeteix el nou PIN:')!==a){toast('No coincideixen');return}
+  S.cicle.salt=u8b64(crypto.getRandomValues(new Uint8Array(16)));CY.key=await cyDerive(a,S.cicle.salt);if(lsGet('salut-cyk'))await cyRemember();cySave();toast('PIN canviat')};
+$('cyIcs').onclick=async()=>{const m=cyModel();if(!m.next){toast('Encara no hi ha cap previsió');return}const d=m.next.replace(/-/g,''),st=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Salut i seny//CA','BEGIN:VEVENT',`UID:cicle-${d}@salut-i-seny`,`DTSTAMP:${st}`,`DTSTART;VALUE=DATE:${d}`,'SUMMARY:Recordatori · Salut i seny','BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatori','TRIGGER:-P1D','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  try{await DL.save({filename:'salut-recordatori.ics',data:new Blob([ics],{type:'text/calendar'})});toast('Obre el fitxer per afegir-lo al calendari')}catch(e){}};
+$('cyRep').onclick=()=>{const m=cyModel(),D=CY.data.days,rows=m.st.slice(-12).map((st,i,a)=>`<tr><td>${fmtD(st)}</td><td>${cyPeriodLen(st)} dies</td><td>${a[i+1]?daysBetween(st,a[i+1])+' dies':'—'}</td></tr>`).join('');
+  const cnt={};Object.values(D).forEach(v=>(v.sym||[]).forEach(i=>cnt[i]=(cnt[i]||0)+1));const sy=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([i,n])=>`<li>${SYM[i]}: ${n} dies</li>`).join('')||'<li>—</li>';
+  const w=window.open('','_blank');if(!w){toast('Permet les finestres emergents per veure l\'informe');return}
+  w.document.write(`<!doctype html><html lang="ca"><meta charset="utf-8"><title>Informe del cicle</title><style>body{font-family:system-ui,sans-serif;max-width:720px;margin:24px auto;padding:0 16px;color:#17191C}h1{font-size:1.4rem}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:6px;text-align:left}small{color:#666}</style>
+    <h1>Informe del cicle menstrual</h1><p><small>Generat el ${fmtD(today())} amb Salut i seny${S.config.nom?' · '+esc(S.config.nom):''}</small></p>
+    <p><b>Durada mitjana del cicle:</b> ${m.lens.length?m.C+' dies':'—'} · <b>Durada mitjana de la regla:</b> ${m.st.length?m.P+' dies':'—'} · <b>Variabilitat:</b> ${m.sd!=null?'±'+fmtC(m.sd,1)+' dies':'—'}</p>
+    ${CY.data.cfg.horm?'<p>Fa servir anticonceptius hormonals.</p>':''}${CY.data.cfg.peri?'<p>Perimenopausa.</p>':''}
+    <h2>Últims cicles</h2><table><tr><th>Inici</th><th>Regla</th><th>Cicle</th></tr>${rows||'<tr><td colspan=3>—</td></tr>'}</table><h2>Símptomes registrats</h2><ul>${sy}</ul><script>print()<\/script></html>`);w.document.close()};
+function renderCyAct(){const box=$('cyAct');if(!box)return;if(!modOn('cicle')||!CY.data){box.hidden=true;return}const f=cyPhase(today(),cyModel());if(!f){box.hidden=true;return}
+  box.hidden=false;box.innerHTML=`<b style="color:${PHC[f.ph]}">${PHN[f.ph]} · dia ${f.d}</b><br>${PHTIP[f.ph]}`}
+setTimeout(cyAutoUnlock,0);
+
+/* ---------- Perspectiva de gènere ---------- */
+function tr(){const C=S.config;return C.tracte||(C.sexe==='h'?'m':C.sexe==='d'?'f':'n')}
+function g(m,f,n){const t=tr();return t==='m'?m:t==='f'?f:(n!=null?n:m)}
 /* ---------- El meu perfil ---------- */
-function renderProf(){renderModList();const C=S.config;setV('pf_nom',C.nom||'');setV('pf_alc',S.pes.alcada||'');setV('pf_pobj',S.pes.obj||'');setV('pf_goal',C.objectiu||'mantenir');setV('pf_act',String(C.activitat||1.375));
+function renderProf(){setV('pf_tr',S.config.tracte||'');renderModList();const C=S.config;setV('pf_nom',C.nom||'');setV('pf_alc',S.pes.alcada||'');setV('pf_pobj',S.pes.obj||'');setV('pf_goal',C.objectiu||'mantenir');setV('pf_act',String(C.activitat||1.375));
   $('pf_obj').innerHTML=`<div class="kpi"><span>Calories</span><b>${fmtN(C.kcal)}</b><small>kcal/dia</small></div><div class="kpi"><span>Proteïna</span><b>${C.p} g</b></div><div class="kpi"><span>Hidrats</span><b>${C.c} g</b></div><div class="kpi"><span>Greixos</span><b>${C.g} g</b></div><div class="kpi"><span>Fibra</span><b>${C.f||30} g</b></div><div class="kpi"><span>Aigua</span><b>${fmtC((S.aigua.obj||2000)/1000,1)} L</b></div><div class="kpi"><span>Passos</span><b>${fmtN(S.passos.obj)}</b></div>`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-prof]');if(!b)return;renderPerfil();renderProf();openFS('sh_prof');if(b.dataset.profmods!==undefined)setTimeout(()=>{const m=$('modList');m&&m.scrollIntoView({behavior:'smooth',block:'center'})},320)});
+$('pf_tr').onchange=()=>{S.config.tracte=$('pf_tr').value||null;save('config');renderAll();renderProf()};
 $('pf_nom').onchange=()=>{S.config.nom=$('pf_nom').value.trim()||null;save('config');renderAll()};
 $('pf_alc').onchange=()=>{S.pes.alcada=num($('pf_alc').value);save('pes');renderAll();renderPerfil()};
 $('pf_pobj').onchange=()=>{S.pes.obj=num($('pf_pobj').value);save('pes');renderAll()};
@@ -2005,15 +2163,15 @@ $('pf_plan').onclick=()=>{closeFS();setTimeout(()=>openPlan($('pf_goal').value,+
 /* ---------- Pla personal a partir del perfil ---------- */
 const GOALS={perdre:{t:'perdre greix',adj:-0.20,pk:2.0,ritme:-0.5},mantenir:{t:'mantenir-te',adj:0,pk:1.6,ritme:0},guanyar:{t:'guanyar múscul',adj:0.10,pk:1.8,ritme:0.25}};
 function computePlan(goal,fa){const a=edat(),sx=S.config.sexe,h=S.pes.alcada,w=pesActual();if(a==null||!h||!w)return{falta:[a==null?'la data de naixement':'',!h?'l\'alçada':'',!w?'el pes':''].filter(Boolean)};
-  const G=GOALS[goal]||GOALS.mantenir,bmr=10*w+6.25*h-5*a+(sx==='h'?5:sx==='d'?-161:-78),tdee=bmr*fa,floor=sx==='d'?1200:1500;
+  const G=GOALS[goal]||GOALS.mantenir,bmr=10*w+6.25*h-5*a+(sx==='h'?5:sx==='d'?-161:-78),tdee=bmr*fa,floor=sx==='d'?1200:sx==='h'?1500:1350;
   let kcal=Math.round(tdee*(1+G.adj)/10)*10;const lim=kcal<floor;if(lim)kcal=floor;
   const p=Math.round(w*G.pk),g=Math.round(kcal*0.30/9),c=Math.max(0,Math.round((kcal-p*4-g*9)/4)),f=Math.max(25,Math.min(38,Math.round(kcal/1000*14))),aig=Math.round(w*35/100)*100;
   const pas=fa<=1.2?7000:fa<=1.375?8000:fa<=1.55?10000:12000;
-  return{goal,fa,G,bmr:Math.round(bmr),tdee:Math.round(tdee),kcal,p,g,c,f,aig,pas,lim,w,noSex:!sx}}
+  return{goal,fa,G,bmr:Math.round(bmr),tdee:Math.round(tdee),kcal,p,g,c,f,aig,pas,lim,w,noSex:!sx||sx==='x'}}
 let plCur=null;
 function renderPlan(){const r=computePlan($('pl_g').value,+$('pl_a').value);plCur=r.falta?null:r;$('pl_ok').disabled=!plCur;
   if(r.falta){$('plBody').innerHTML=`<p class="note">Per calcular-lo falta ${r.falta.join(', ')}. Afegeix-ho a <b>Pes → Registre → El meu perfil</b>.</p>`;return}
-  $('plBody').innerHTML=`<p class="note" style="margin-top:4px">Per <b>${r.G.t}</b>: la teva despesa estimada és d'uns <b>${fmtN(r.tdee)} kcal/dia</b>${r.G.adj?` i hi apliquem un ${r.G.adj<0?'dèficit':'superàvit'} del ${Math.abs(r.G.adj*100)} %`:''}.${r.lim?` Limitat al mínim recomanat de ${fmtN(r.kcal)} kcal.`:''}${r.noSex?' <i>(Sense el sexe al perfil, el càlcul és aproximat.)</i>':''}</p>
+  $('plBody').innerHTML=`<p class="note" style="margin-top:4px">Per <b>${r.G.t}</b>: la teva despesa estimada és d'uns <b>${fmtN(r.tdee)} kcal/dia</b>${r.G.adj?` i hi apliquem un ${r.G.adj<0?'dèficit':'superàvit'} del ${Math.abs(r.G.adj*100)} %`:''}.${r.lim?` Limitat al mínim recomanat de ${fmtN(r.kcal)} kcal.`:''}${r.noSex?' <i>(Sense el sexe biològic, el càlcul fa servir una mitjana i és aproximat.)</i>':''}</p>
     <div class="kpis plan"><div class="kpi"><span>Calories</span><b>${fmtN(r.kcal)}</b><small>kcal/dia</small></div><div class="kpi"><span>Proteïna</span><b>${r.p} g</b><small>${fmtC(r.G.pk,1)} g/kg</small></div><div class="kpi"><span>Hidrats</span><b>${r.c} g</b><small>la resta</small></div><div class="kpi"><span>Greixos</span><b>${r.g} g</b><small>30 % kcal</small></div><div class="kpi"><span>Fibra</span><b>${r.f} g</b><small>mínim</small></div><div class="kpi"><span>Aigua</span><b>${fmtC(r.aig/1000,1)} L</b><small>35 ml/kg</small></div><div class="kpi"><span>Passos</span><b>${fmtN(r.pas)}</b><small>al dia</small></div></div>
     <p class="note">D'aquí a 2-3 setmanes, amb les teves dades reals, l'app et proposarà ajustar-lo amb l'objectiu adaptatiu.</p>`}
 function openPlan(goal,fa){if(goal)$('pl_g').value=goal;if(fa)$('pl_a').value=String(fa);renderPlan();openFS('sh_plan')}
@@ -2024,13 +2182,15 @@ $('pl_ok').onclick=()=>{const r=plCur;if(!r)return;const C=S.config;
 $('planBtn').onclick=()=>{closeFS();setTimeout(()=>openPlan(S.config.objectiu,S.config.activitat),300)};
 
 /* ---------- Benvinguda (primer cop) ---------- */
-function onbCheck(){if(S.config.onb||S.config.naix||S.pes.items.length||lsGet('salut-onb'))return;openFS('sh_onb','ob_naix')}
+async function onbCheck(){const r=await dbReady;if(!r.ok)return;if(S.config.onb||S.config.naix||S.pes.items.length||lsGet('salut-onb'))return;openFS('sh_onb','ob_naix')}
 $('ob_go').onclick=()=>{const naix=$('ob_naix').value||null,sexe=$('ob_sexe').value,alc=num($('ob_alc').value),pes=num($('ob_pes').value),obj=num($('ob_obj').value);
+  const tracte=$('ob_tr').value||null;
   const mods={};document.querySelectorAll('[data-obm]').forEach(c=>mods[c.dataset.obm]=c.checked);if(!Object.values(mods).some(Boolean))mods.nutri=true;
-  Object.assign(S.config,{naix,sexe,onb:true,mods});if(alc)S.pes.alcada=alc;if(obj)S.pes.obj=obj;if(pes)S.pes.items.push({id:uid(),data:today(),pes,imc:null});
+  mods.cicle=!$('ob_cyL').hidden&&$('ob_cy').checked;
+  Object.assign(S.config,{naix,sexe,tracte,onb:true,mods});if(alc)S.pes.alcada=alc;if(obj)S.pes.obj=obj;if(pes)S.pes.items.push({id:uid(),data:today(),pes,imc:null});
   save('config');save('pes');lsSet('salut-onb','1');closeFS();renderAll();if(mods.nutri)setTimeout(()=>openPlan($('ob_g').value,+$('ob_a').value),350)};
 $('ob_skip').onclick=()=>{S.config.onb=true;save('config');lsSet('salut-onb','1');closeFS()};
-window.SALUT_USER&&window.SALUT_USER.then(()=>setTimeout(onbCheck,1800));
+dbReady.then(()=>setTimeout(onbCheck,300));
 
 /* ---------- Full d'afegir ràpid ---------- */
 let sheetPrev=null;
@@ -2043,6 +2203,7 @@ const focusLater=(id,cb)=>setTimeout(()=>{if(cb)cb();const e=$(id);if(e){e.scrol
 document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const q=b.dataset.q;closeSheet();
   if(q==='menjar'){show('nutri');showNt('avui');if(nDay!==today()){nDay=today();renderAll()}focusLater('ai_q')}
   else if(q==='aigua'){if(nDay!==today()){nDay=today();renderAll()}addAigua(S.aigua.got||250);toast(`+${S.aigua.got||250} ml · ${fmtC((S.aigua.days[today()]||0)/1000,2)} L avui`);renderResum()}
+  else if(q==='cicle'){show('cicle')}
   else if(q==='pes'){show('pes');showPt('registre');openFS('sh_pes','p_pes')}
   else if(q==='tensio'){show('tensio');openFS('sh_ten','t_sis')}
   else if(q==='entreno'){show('entrenos');openFS('sh_ent','e_dur')}
@@ -2568,6 +2729,7 @@ function applyResLayout(){const off=S.config.resumOff||[],box=$('resBlocks');res
   const mv=(k,dlt)=>{const o2=resOrder(),i=o2.indexOf(k),j=i+dlt;if(j<0||j>=o2.length)return;[o2[i],o2[j]]=[o2[j],o2[i]];S.config.resum=o2;save('config');applyResLayout()};
   document.querySelectorAll('[data-rup]').forEach(b=>b.onclick=()=>mv(b.dataset.rup,-1));document.querySelectorAll('[data-rdn]').forEach(b=>b.onclick=()=>mv(b.dataset.rdn,1));}
 function renderInsights(){const t=today(),C=S.config,out=[];
+  if(modOn('cicle')&&CY.data){const f=cyPhase(t,cyModel());if(f)out.push(['ok',`Cicle: ${PHN[f.ph].toLowerCase()} (dia ${f.d}). ${f.ph==='lutia'?'És normal que el pes pugi una mica per la retenció de líquids.':PHTIP[f.ph]}`])}
   if(C.plaData&&C.plaData<=addDays(t,-21)&&!C.adaptAvis){try{const e=estTDEE();if(e&&e.ok)out.push(['ok',`Ja tens prou dades! La teva despesa real és d'uns <b>${fmtN(e.tdee)} kcal/dia</b>. Revisa els objectius a <b>El meu perfil</b> per ajustar el pla.`])}catch(err){}}
   const closed=[...Array(7)].map((_,i)=>addDays(t,-(i+1))),logged=closed.filter(d=>dayTot(d).k>0);
   const rt=pesRate(pesTrend());if(rt!=null)out.push([rt<=0?'ok':'mid',`El pes ${rt<0?'baixa':'puja'} <b>${fmtC(Math.abs(rt),2)} kg/setmana</b> segons la tendència.`]);
@@ -2600,7 +2762,7 @@ function renderResum(){const hn=$('hiName');if(hn)hn.textContent=S.config.nom?`H
     {s:'entrenos',dom:'--c-act',k:'Entrenaments aquesta setmana',v:wk[7]+'',n:lastEnt?`Últim: ${esc(lastEnt.tipus)}, ${fmtD(lastEnt.data)}`:'Cap sessió encara',sp:sparkBars(wk,'var(--c-act)')},
     {s:'pes',dom:'--c-pes',k:'Cintura',v:lc?`${fmtC(lc.cint)}<small>cm</small>`:'—',n:(()=>{const w=whtr();return w?`Cintura/alçada ${fmtC(w.r,2)} · ${w.cls[0].toLowerCase()}`:(vis?`Greix visceral ${fmtC(vis.visc)}`:'Afegeix-la a Pes')})(),sp:spark(cs.slice(-20).map(x=>x.cint),'var(--c-pes)')}
   ];
-  {const MS={pes:'pes',tensio:'ten',entrenos:'act',nutri:'nutri'};for(let i=rows.length-1;i>=0;i--){const k=MS[rows[i].s];if(k&&!modOn(k))rows.splice(i,1)}}
+  {const MS={pes:'pes',tensio:'ten',entrenos:'act',nutri:'nutri',cicle:'cicle'};if(modOn('cicle')&&CY.data)rows.push(cyVital());for(let i=rows.length-1;i>=0;i--){const k=MS[rows[i].s];if(k&&!modOn(k))rows.splice(i,1)}}
   $('vitals').innerHTML=rows.map((r,ri)=>`<button class="vital" data-go="${r.s}" ${r.nt?`data-gont="${r.nt}"`:''} style="--dom:var(${r.dom});--i:${ri}"><span class="vk">${r.k}</span><span class="vv num">${r.v}</span><span class="vn">${r.n}</span><span class="vs">${r.sp}</span></button>`).join('');
 }
 
@@ -2633,7 +2795,7 @@ function renderPas(){
   const days=[...Array(14)].map((_,i)=>addDays(t,i-13)),vals=days.map(d=>S.passos.days[d]||0),mx=Math.max(O*1.25,...vals)||1;
   $('pasBars').innerHTML=`<div class="bars"><div class="goal" style="bottom:${O/mx*100}%"></div>${vals.map((x,i)=>`<div class="col" title="${fmtD(days[i])}: ${fmtN(x)} passos"><div style="height:${x/mx*100}%;${x>=O?'':'opacity:.55'}"></div></div>`).join('')}</div><div class="blabels">${days.map((d,i)=>`<span>${i%2?'':new Date(d+'T12:00:00').getDate()}</span>`).join('')}</div><div class="legend"><span><i style="background:var(--amber)"></i>Objectiu</span><span><i style="background:var(--pine)"></i>Objectiu assolit</span></div>`;
 }
-function renderAll(){if(S.config.accent&&S.config.accent!==document.documentElement.dataset.accent){applyAccent(S.config.accent);lsSet('salut-accent',S.config.accent)}[applyMods,renderConsells,renderExport,renderTuppers,renderFromRep,renderDejuni,renderMacAuto,renderRep,renderAigua,renderWeek,renderQuick,renderTDEE,renderCal,renderPas,renderResum,renderPes,renderEnt,renderTens,renderNutri].forEach(f=>{try{f()}catch(e){diag('renderErr',{f:f.name,m:String(e&&e.message).slice(0,160)});console.error(f.name,e)}})}
+function renderAll(){if(CY.key&&S.cicle&&S.cicle.ct&&S.cicle.ct!==CY._ct){CY._ct=S.cicle.ct;cyDecrypt()}if(S.config.accent&&S.config.accent!==document.documentElement.dataset.accent){applyAccent(S.config.accent);lsSet('salut-accent',S.config.accent)}[applyMods,renderCicle,renderCyAct,renderConsells,renderExport,renderTuppers,renderFromRep,renderDejuni,renderMacAuto,renderRep,renderAigua,renderWeek,renderQuick,renderTDEE,renderCal,renderPas,renderResum,renderPes,renderEnt,renderTens,renderNutri].forEach(f=>{try{f()}catch(e){diag('renderErr',{f:f.name,m:String(e&&e.message).slice(0,160)});console.error(f.name,e)}})}
 let lastDay=today();
 document.addEventListener('visibilitychange',()=>{if(document.hidden)return;const t=today();if(t===lastDay)return;const prev=lastDay;lastDay=t;
   if(nDay===prev){nDay=t;initHora()}['p_data','e_data','t_data','s_data'].forEach(i=>{if($(i)&&$(i).value===prev)$(i).value=t});renderAll()});
